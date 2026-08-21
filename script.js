@@ -2,11 +2,7 @@ import * as THREE from "three";
 
 // =====================================================
 // KINGDOMS BEYOND 0.5
-// CHARACTER + COMBAT + ENEMY HEALTH BARS + WORLD
-// =====================================================
-
-// =====================================================
-// SZENE
+// CHARAKTER + SCHWERT + GEGNER + RESPAWN
 // =====================================================
 
 const scene = new THREE.Scene();
@@ -15,8 +11,8 @@ scene.background = new THREE.Color(0x87ceeb);
 
 scene.fog = new THREE.Fog(
     0x87ceeb,
-    45,
-    190
+    40,
+    180
 );
 
 // =====================================================
@@ -24,7 +20,7 @@ scene.fog = new THREE.Fog(
 // =====================================================
 
 const camera = new THREE.PerspectiveCamera(
-    70,
+    75,
     window.innerWidth / window.innerHeight,
     0.1,
     500
@@ -47,7 +43,9 @@ renderer.setPixelRatio(
     Math.min(window.devicePixelRatio, 2)
 );
 
-document.body.appendChild(renderer.domElement);
+document.body.appendChild(
+    renderer.domElement
+);
 
 // =====================================================
 // LICHT
@@ -56,18 +54,18 @@ document.body.appendChild(renderer.domElement);
 scene.add(
     new THREE.HemisphereLight(
         0xffffff,
-        0x405040,
-        2.2
+        0x444444,
+        2
     )
 );
 
 const sun = new THREE.DirectionalLight(
     0xffffff,
-    2.5
+    2
 );
 
 sun.position.set(
-    40,
+    50,
     80,
     30
 );
@@ -80,8 +78,8 @@ scene.add(sun);
 
 const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(
-        320,
-        320
+        300,
+        300
     ),
     new THREE.MeshStandardMaterial({
         color: 0x3f6b35
@@ -96,19 +94,19 @@ scene.add(ground);
 // WELT
 // =====================================================
 
-function createTree(x, z, scale = 1) {
+function createTree(x, z) {
 
     const tree = new THREE.Group();
 
     const trunk = new THREE.Mesh(
         new THREE.CylinderGeometry(
-            0.45,
-            0.65,
+            0.5,
+            0.7,
             4,
             8
         ),
         new THREE.MeshStandardMaterial({
-            color: 0x654321
+            color: 0x6b3f22
         })
     );
 
@@ -118,7 +116,7 @@ function createTree(x, z, scale = 1) {
 
     const leaves = new THREE.Mesh(
         new THREE.ConeGeometry(
-            2.6,
+            2.5,
             6,
             8
         ),
@@ -137,31 +135,32 @@ function createTree(x, z, scale = 1) {
         z
     );
 
-    tree.scale.setScalar(scale);
-
     scene.add(tree);
 }
 
 [
-    [-15, -15, 1],
-    [10, -20, 1.1],
-    [25, -5, 0.9],
-    [-25, 10, 1.2],
-    [20, 20, 1],
-    [-10, 25, 1.1],
-    [35, 15, 1],
-    [-35, -20, 1.2],
-    [5, 35, 0.9],
-    [-30, 30, 1],
-    [40, -15, 1.2],
-    [-40, 10, 1],
-    [15, 40, 1],
-    [-20, 40, 1.2]
+    [-15, -15],
+    [10, -20],
+    [25, -5],
+    [-25, 10],
+    [20, 20],
+    [-10, 25],
+    [35, 15],
+    [-35, -20],
+    [5, 35],
+    [-30, 30],
+    [40, -15],
+    [-40, 10],
+    [15, 40],
+    [-20, 40]
 ].forEach(p => {
-    createTree(p[0], p[1], p[2]);
+    createTree(
+        p[0],
+        p[1]
+    );
 });
 
-function createRock(x, z, scale = 1) {
+function createRock(x, z) {
 
     const rock = new THREE.Mesh(
         new THREE.DodecahedronGeometry(
@@ -179,150 +178,36 @@ function createRock(x, z, scale = 1) {
         z
     );
 
-    rock.scale.setScalar(scale);
-
-    rock.scale.y *= 0.7;
+    rock.scale.y = 0.7;
 
     scene.add(rock);
 }
 
 [
-    [8, 8, 1],
-    [-8, -5, 0.8],
-    [15, 5, 1.2],
-    [-18, 0, 1],
-    [30, 10, 1.3],
-    [-30, -5, 1],
-    [5, -30, 0.8],
-    [-25, -30, 1.2]
+    [8, 8],
+    [-8, -5],
+    [15, 5],
+    [-18, 0],
+    [30, 10],
+    [-30, -5],
+    [5, -30],
+    [-25, -30]
 ].forEach(p => {
-    createRock(p[0], p[1], p[2]);
+    createRock(
+        p[0],
+        p[1]
+    );
 });
 
 // =====================================================
-// RUINEN
-// =====================================================
-
-function createRuin(x, z) {
-
-    const ruin = new THREE.Group();
-
-    for (let i = 0; i < 4; i++) {
-
-        const wall = new THREE.Mesh(
-            new THREE.BoxGeometry(
-                2,
-                5,
-                1
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x77716a
-            })
-        );
-
-        wall.position.set(
-            (i - 1.5) * 3,
-            2.5,
-            0
-        );
-
-        ruin.add(wall);
-    }
-
-    const entrance = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            3,
-            4,
-            1.2
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x625c55
-        })
-    );
-
-    entrance.position.set(
-        0,
-        2,
-        -2
-    );
-
-    ruin.add(entrance);
-
-    ruin.position.set(
-        x,
-        0,
-        z
-    );
-
-    scene.add(ruin);
-}
-
-createRuin(
-    -55,
-    -45
-);
-
-// =====================================================
-// TRUHEN
-// =====================================================
-
-function createChest(x, z) {
-
-    const chest = new THREE.Group();
-
-    const body = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            1.8,
-            1,
-            1.2
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x6b3f20
-        })
-    );
-
-    body.position.y = 0.5;
-
-    chest.add(body);
-
-    const lid = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            1.9,
-            0.25,
-            1.3
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0xc28b32
-        })
-    );
-
-    lid.position.y = 1.05;
-
-    chest.add(lid);
-
-    chest.position.set(
-        x,
-        0,
-        z
-    );
-
-    scene.add(chest);
-}
-
-createChest(
-    18,
-    -12
-);
-
-// =====================================================
-// SPIELERDATEN
+// SPIELER
 // =====================================================
 
 const player = {
 
     position: new THREE.Vector3(
         0,
-        1,
+        0,
         10
     ),
 
@@ -346,11 +231,15 @@ const player = {
 
     gold: 0,
 
-    weaponDamage: 25,
-
     attackCooldown: 0,
 
-    attacking: false
+    weapon: "Eisenschwert",
+
+    weaponDamage: 25,
+
+    armor: "Keine Rüstung",
+
+    armorBonus: 0
 
 };
 
@@ -373,163 +262,157 @@ const inventory = {
 };
 
 // =====================================================
-// CHARAKTER
+// SPIELER-MODELL
 // =====================================================
 
 const playerMesh = new THREE.Group();
 
 scene.add(playerMesh);
 
-function createCharacter() {
+// =====================================================
+// KÖRPER
+// =====================================================
 
-    // Beine
-    const legMaterial =
-        new THREE.MeshStandardMaterial({
-            color: 0x26364a
-        });
-
-    const leftLeg = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.32,
-            1.2,
-            0.32
-        ),
-        legMaterial
-    );
-
-    leftLeg.position.set(
-        -0.22,
-        0.6,
-        0
-    );
-
-    playerMesh.add(leftLeg);
-
-    const rightLeg = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.32,
-            1.2,
-            0.32
-        ),
-        legMaterial
-    );
-
-    rightLeg.position.set(
-        0.22,
-        0.6,
-        0
-    );
-
-    playerMesh.add(rightLeg);
-
-    // Körper
-    const body = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.85,
-            1.25,
-            0.5
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x385b82
-        })
-    );
-
-    body.position.y = 1.65;
-
-    playerMesh.add(body);
-
-    // Kopf
-    const head = new THREE.Mesh(
-        new THREE.SphereGeometry(
-            0.42,
-            16,
-            16
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0xd5a77a
-        })
-    );
-
-    head.position.y = 2.55;
-
-    playerMesh.add(head);
-
-    // Haare
-    const hair = new THREE.Mesh(
-        new THREE.SphereGeometry(
-            0.44,
-            16,
-            8,
-            0,
-            Math.PI * 2,
-            0,
-            Math.PI / 2
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x2a1b12
-        })
-    );
-
-    hair.position.y = 2.7;
-
-    playerMesh.add(hair);
-
-    // Arme
-    const armMaterial =
-        new THREE.MeshStandardMaterial({
-            color: 0x385b82
-        });
-
-    const leftArm = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.25,
-            1,
-            0.25
-        ),
-        armMaterial
-    );
-
-    leftArm.position.set(
-        -0.6,
-        1.7,
-        0
-    );
-
-    leftArm.rotation.z = 0.12;
-
-    playerMesh.add(leftArm);
-
-    const rightArm = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.25,
-            1,
-            0.25
-        ),
-        armMaterial
-    );
-
-    rightArm.position.set(
-        0.6,
-        1.7,
-        0
-    );
-
-    rightArm.rotation.z = -0.12;
-
-    playerMesh.add(rightArm);
-
-    return {
-        leftArm,
-        rightArm
-    };
-}
-
-const characterParts =
-    createCharacter();
-
-playerMesh.position.copy(
-    player.position
+const body = new THREE.Mesh(
+    new THREE.BoxGeometry(
+        0.9,
+        1.35,
+        0.55
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0x315b8c
+    })
 );
+
+body.position.y = 1.65;
+
+playerMesh.add(body);
+
+// =====================================================
+// KOPF
+// =====================================================
+
+const head = new THREE.Mesh(
+    new THREE.SphereGeometry(
+        0.38,
+        16,
+        16
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0xd8a07c
+    })
+);
+
+head.position.y = 2.65;
+
+playerMesh.add(head);
+
+// =====================================================
+// HAARE
+// =====================================================
+
+const hair = new THREE.Mesh(
+    new THREE.SphereGeometry(
+        0.39,
+        16,
+        16,
+        0,
+        Math.PI * 2,
+        0,
+        Math.PI * 0.55
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0x24180f
+    })
+);
+
+hair.position.y = 2.72;
+
+playerMesh.add(hair);
+
+// =====================================================
+// BEINE
+// =====================================================
+
+const leftLeg = new THREE.Mesh(
+    new THREE.BoxGeometry(
+        0.32,
+        0.9,
+        0.4
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0x202b42
+    })
+);
+
+leftLeg.position.set(
+    -0.22,
+    0.55,
+    0
+);
+
+playerMesh.add(leftLeg);
+
+const rightLeg = new THREE.Mesh(
+    new THREE.BoxGeometry(
+        0.32,
+        0.9,
+        0.4
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0x202b42
+    })
+);
+
+rightLeg.position.set(
+    0.22,
+    0.55,
+    0
+);
+
+playerMesh.add(rightLeg);
+
+// =====================================================
+// ARME
+// =====================================================
+
+const leftArm = new THREE.Mesh(
+    new THREE.BoxGeometry(
+        0.28,
+        1.1,
+        0.28
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0x315b8c
+    })
+);
+
+leftArm.position.set(
+    -0.62,
+    1.65,
+    0
+);
+
+playerMesh.add(leftArm);
+
+const rightArm = new THREE.Mesh(
+    new THREE.BoxGeometry(
+        0.28,
+        1.1,
+        0.28
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0x315b8c
+    })
+);
+
+rightArm.position.set(
+    0.62,
+    1.65,
+    0
+);
+
+playerMesh.add(rightArm);
 
 // =====================================================
 // SCHWERT
@@ -540,30 +423,29 @@ const sword = new THREE.Group();
 const blade = new THREE.Mesh(
     new THREE.BoxGeometry(
         0.12,
-        2.4,
+        2.5,
         0.28
     ),
     new THREE.MeshStandardMaterial({
-        color: 0xd5d9dc,
-        metalness: 0.85,
-        roughness: 0.2
+        color: 0xcfd8dc,
+        metalness: 0.8,
+        roughness: 0.25
     })
 );
 
-// Das Schwert zeigt nach vorne
 blade.position.y = 1.25;
 
 sword.add(blade);
 
 const guard = new THREE.Mesh(
     new THREE.BoxGeometry(
-        0.8,
+        0.85,
         0.12,
-        0.15
+        0.16
     ),
     new THREE.MeshStandardMaterial({
-        color: 0xc28b32,
-        metalness: 0.6
+        color: 0xb08d32,
+        metalness: 0.7
     })
 );
 
@@ -574,11 +456,11 @@ sword.add(guard);
 const handle = new THREE.Mesh(
     new THREE.BoxGeometry(
         0.16,
-        0.7,
+        0.65,
         0.16
     ),
     new THREE.MeshStandardMaterial({
-        color: 0x4b2e1d
+        color: 0x5d4037
     })
 );
 
@@ -586,19 +468,17 @@ handle.position.y = -0.35;
 
 sword.add(handle);
 
-// Schwert in rechter Hand
+// Das Schwert wird vor der rechten Hand gehalten
 sword.position.set(
-    0.72,
+    0.65,
     1.35,
     -0.15
 );
 
-// Drehung so, dass die Klinge nach vorne zeigt
-sword.rotation.x = Math.PI / 2;
+// Es zeigt nach vorne
+sword.rotation.z = -0.35;
 
-characterParts.rightArm.add(
-    sword
-);
+playerMesh.add(sword);
 
 // =====================================================
 // GEGNERTYPEN
@@ -619,7 +499,7 @@ const enemyTypes = {
     },
 
     runner: {
-        name: "Runner",
+        name: "Schneller",
         health: 35,
         speed: 4.2,
         damage: 7,
@@ -652,30 +532,21 @@ const enemyTypes = {
         goldMax: 60,
         color: 0x8e44ad,
         scale: 1.5
-    },
-
-    boss: {
-        name: "Schattenwächter",
-        health: 600,
-        speed: 1.4,
-        damage: 35,
-        xp: 700,
-        goldMin: 100,
-        goldMax: 200,
-        color: 0x17122b,
-        scale: 2.2
     }
 };
 
 // =====================================================
-// ENEMIES
+// GEGNER
 // =====================================================
 
 const enemies = [];
 
 const MAX_ENEMIES = 6;
 
+const RESPAWN_TIME = 15;
+
 const spawnPoints = [
+
     [12, 2],
     [-15, -10],
     [20, 15],
@@ -684,7 +555,12 @@ const spawnPoints = [
     [-30, 15],
     [35, 30],
     [-35, -30]
+
 ];
+
+// =====================================================
+// GEGNER-LEBENSBALKEN
+// =====================================================
 
 function createEnemyHealthBar(enemy) {
 
@@ -694,85 +570,38 @@ function createEnemyHealthBar(enemy) {
     container.style.position = "fixed";
     container.style.width = "70px";
     container.style.height = "8px";
-    container.style.background =
-        "rgba(0,0,0,0.75)";
-    container.style.border =
-        "1px solid white";
-    container.style.zIndex = "15";
-    container.style.pointerEvents =
-        "none";
+    container.style.background = "rgba(0,0,0,0.7)";
+    container.style.border = "1px solid white";
+    container.style.zIndex = "30";
+    container.style.pointerEvents = "none";
 
     const bar =
         document.createElement("div");
 
-    bar.style.width = "100%";
     bar.style.height = "100%";
+    bar.style.width = "100%";
     bar.style.background = "#d62828";
 
     container.appendChild(bar);
 
-    document.body.appendChild(
-        container
-    );
+    document.body.appendChild(container);
 
-    enemy.healthBarContainer =
-        container;
-
-    enemy.healthBar =
-        bar;
+    enemy.healthBarContainer = container;
+    enemy.healthBar = bar;
 }
 
-function updateEnemyHealthBar(enemy) {
-
-    if (
-        !enemy.alive ||
-        !enemy.healthBarContainer
-    ) {
-
-        return;
-    }
-
-    const position =
-        enemy.position.clone();
-
-    position.y +=
-        enemy.scale * 2.4;
-
-    position.project(camera);
-
-    const x =
-        (position.x * 0.5 + 0.5) *
-        window.innerWidth;
-
-    const y =
-        (-position.y * 0.5 + 0.5) *
-        window.innerHeight;
-
-    enemy.healthBarContainer.style.left =
-        `${x - 35}px`;
-
-    enemy.healthBarContainer.style.top =
-        `${y}px`;
-
-    enemy.healthBar.style.width =
-        `${Math.max(
-            0,
-            enemy.health /
-            enemy.maxHealth *
-            100
-        )}%`;
-}
+// =====================================================
+// GEGNER-TYP AUSWÄHLEN
+// =====================================================
 
 function chooseEnemyType() {
 
-    const roll =
-        Math.random();
+    const roll = Math.random();
 
     if (
         player.level >= 3 &&
         roll < 0.08
     ) {
-
         return "elite";
     }
 
@@ -787,18 +616,113 @@ function chooseEnemyType() {
     return "grunt";
 }
 
+// =====================================================
+// GEGNER ERSTELLEN
+// =====================================================
+
+function createEnemyMesh(enemy, data) {
+
+    const group =
+        new THREE.Group();
+
+    const body =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.9,
+                1.3,
+                0.55
+            ),
+            new THREE.MeshStandardMaterial({
+                color: data.color
+            })
+        );
+
+    body.position.y = 1.4;
+
+    group.add(body);
+
+    const head =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.38,
+                12,
+                12
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xb96d55
+            })
+        );
+
+    head.position.y = 2.35;
+
+    group.add(head);
+
+    const leftArm =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.25,
+                1,
+                0.25
+            ),
+            new THREE.MeshStandardMaterial({
+                color: data.color
+            })
+        );
+
+    leftArm.position.set(
+        -0.62,
+        1.4,
+        0
+    );
+
+    group.add(leftArm);
+
+    const rightArm =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.25,
+                1,
+                0.25
+            ),
+            new THREE.MeshStandardMaterial({
+                color: data.color
+            })
+        );
+
+    rightArm.position.set(
+        0.62,
+        1.4,
+        0
+    );
+
+    group.add(rightArm);
+
+    group.scale.set(
+        data.scale,
+        data.scale,
+        data.scale
+    );
+
+    group.position.copy(
+        enemy.position
+    );
+
+    return group;
+}
+
 function spawnEnemy(typeName = null) {
 
     if (
-        enemies.filter(e => e.alive)
-            .length >= MAX_ENEMIES
+        enemies.filter(
+            e => e.alive
+        ).length >= MAX_ENEMIES
     ) {
-
         return;
     }
 
     const type =
-        typeName || chooseEnemyType();
+        typeName ||
+        chooseEnemyType();
 
     const data =
         enemyTypes[type];
@@ -811,7 +735,7 @@ function spawnEnemy(typeName = null) {
             )
         ];
 
-    const multiplier =
+    const levelMultiplier =
         1 +
         (player.level - 1) *
         0.08;
@@ -825,20 +749,20 @@ function spawnEnemy(typeName = null) {
         position:
             new THREE.Vector3(
                 spawn[0],
-                data.scale,
+                0,
                 spawn[1]
             ),
 
         health:
             Math.floor(
                 data.health *
-                multiplier
+                levelMultiplier
             ),
 
         maxHealth:
             Math.floor(
                 data.health *
-                multiplier
+                levelMultiplier
             ),
 
         speed: data.speed,
@@ -846,56 +770,40 @@ function spawnEnemy(typeName = null) {
         damage:
             Math.floor(
                 data.damage *
-                multiplier
+                levelMultiplier
             ),
 
         xp:
             Math.floor(
                 data.xp *
-                multiplier
+                levelMultiplier
             ),
 
-        goldMin:
-            data.goldMin,
+        goldMin: data.goldMin,
 
-        goldMax:
-            data.goldMax,
-
-        scale: data.scale,
+        goldMax: data.goldMax,
 
         alive: true,
 
         attackCooldown: 0,
 
-        respawnTimer: 15,
+        respawnTimer: 0,
 
         mesh: null,
 
         healthBarContainer: null,
 
-        healthBar: null
+        healthBar: null,
+
+        scale: data.scale
+
     };
 
     enemy.mesh =
-        new THREE.Mesh(
-            new THREE.CapsuleGeometry(
-                0.6,
-                1.4,
-                6,
-                10
-            ),
-            new THREE.MeshStandardMaterial({
-                color: data.color
-            })
+        createEnemyMesh(
+            enemy,
+            data
         );
-
-    enemy.mesh.scale.setScalar(
-        data.scale
-    );
-
-    enemy.mesh.position.copy(
-        enemy.position
-    );
 
     scene.add(
         enemy.mesh
@@ -909,7 +817,9 @@ function spawnEnemy(typeName = null) {
         enemy
     );
 
-    if (type === "elite") {
+    if (
+        type === "elite"
+    ) {
 
         showMessage(
             "👑 EIN ELITE-GEGNER IST ERSCHIENEN!"
@@ -917,45 +827,14 @@ function spawnEnemy(typeName = null) {
     }
 }
 
-// Startgegner
+// =====================================================
+// STARTGEGNER
+// =====================================================
+
 spawnEnemy("grunt");
 spawnEnemy("grunt");
 spawnEnemy("runner");
 spawnEnemy("tank");
-
-// =====================================================
-// BOSS
-// =====================================================
-
-let bossSpawned = false;
-
-function spawnBoss() {
-
-    if (bossSpawned) {
-        return;
-    }
-
-    bossSpawned = true;
-
-    const boss =
-        spawnEnemy("boss");
-
-    showMessage(
-        "👑 DER SCHATTENWÄCHTER IST ERWACHT!"
-    );
-}
-
-// Boss später über Level 5
-function checkBoss() {
-
-    if (
-        player.level >= 5 &&
-        !bossSpawned
-    ) {
-
-        spawnBoss();
-    }
-}
 
 // =====================================================
 // LOOT
@@ -976,27 +855,18 @@ function dropLoot(enemy) {
 
     player.gold += gold;
 
-    inventory["Goldmünze"] +=
-        gold;
+    inventory["Goldmünze"] += gold;
 
-    if (enemy.type === "boss") {
-
-        inventory["Eisen"] += 10;
-        inventory["Leder"] += 10;
-
-        showMessage(
-            "👑 SCHATTENWÄCHTER BESIEGT! +10 Eisen +10 Leder"
-        );
-
-    }
-    else if (
-        Math.random() < 0.35
+    if (
+        enemy.type === "elite"
     ) {
 
-        inventory["Heiltrank"]++;
+        inventory["Eisen"] += 2;
+
+        inventory["Leder"] += 2;
 
         showMessage(
-            `+${gold} Gold | +1 Heiltrank`
+            `👑 Elite-Loot: +${gold} Gold`
         );
 
     }
@@ -1004,10 +874,10 @@ function dropLoot(enemy) {
         Math.random() < 0.5
     ) {
 
-        inventory["Leder"]++;
+        inventory["Heiltrank"]++;
 
         showMessage(
-            `+${gold} Gold | +1 Leder`
+            `+${gold} Gold | +1 Heiltrank`
         );
 
     }
@@ -1018,9 +888,12 @@ function dropLoot(enemy) {
         showMessage(
             `+${gold} Gold | +1 Eisen`
         );
+
     }
 
     updateHUD();
+
+    saveGame(false);
 }
 
 // =====================================================
@@ -1043,6 +916,8 @@ function gainXP(amount) {
     }
 
     updateHUD();
+
+    saveGame(false);
 }
 
 function levelUp() {
@@ -1065,8 +940,6 @@ function levelUp() {
     showMessage(
         `⭐ LEVEL UP! Level ${player.level}`
     );
-
-    checkBoss();
 }
 
 // =====================================================
@@ -1081,32 +954,35 @@ function killEnemy(enemy) {
 
     enemy.alive = false;
 
-    enemy.respawnTimer = 15;
+    enemy.respawnTimer =
+        RESPAWN_TIME;
+
+    enemy.mesh.rotation.z =
+        Math.PI / 2;
 
     if (
         enemy.healthBarContainer
     ) {
 
-        enemy.healthBarContainer
-            .style.display =
+        enemy.healthBarContainer.style.display =
             "none";
     }
 
-    scene.remove(
-        enemy.mesh
-    );
+    gainXP(enemy.xp);
 
-    gainXP(
-        enemy.xp
-    );
-
-    dropLoot(
-        enemy
-    );
+    dropLoot(enemy);
 
     showMessage(
         `${enemy.name} besiegt!`
     );
+
+    setTimeout(() => {
+
+        scene.remove(
+            enemy.mesh
+        );
+
+    }, 500);
 }
 
 // =====================================================
@@ -1123,24 +999,17 @@ function updateRespawns(delta) {
             continue;
         }
 
-        // Boss respawnt nicht
-        if (
-            enemy.type === "boss"
-        ) {
-            continue;
-        }
-
         enemy.respawnTimer -= delta;
 
         if (
             enemy.respawnTimer <= 0
         ) {
 
-            const newType =
+            const type =
                 chooseEnemyType();
 
             const data =
-                enemyTypes[newType];
+                enemyTypes[type];
 
             const spawn =
                 spawnPoints[
@@ -1150,13 +1019,12 @@ function updateRespawns(delta) {
                     )
                 ];
 
-            const multiplier =
+            const levelMultiplier =
                 1 +
                 (player.level - 1) *
                 0.08;
 
-            enemy.type =
-                newType;
+            enemy.type = type;
 
             enemy.name =
                 data.name;
@@ -1164,7 +1032,7 @@ function updateRespawns(delta) {
             enemy.health =
                 Math.floor(
                     data.health *
-                    multiplier
+                    levelMultiplier
                 );
 
             enemy.maxHealth =
@@ -1176,56 +1044,48 @@ function updateRespawns(delta) {
             enemy.damage =
                 Math.floor(
                     data.damage *
-                    multiplier
+                    levelMultiplier
                 );
 
             enemy.xp =
                 Math.floor(
                     data.xp *
-                    multiplier
+                    levelMultiplier
                 );
 
-            enemy.scale =
-                data.scale;
+            enemy.goldMin =
+                data.goldMin;
+
+            enemy.goldMax =
+                data.goldMax;
 
             enemy.position.set(
                 spawn[0],
-                data.scale,
+                0,
                 spawn[1]
             );
 
             enemy.mesh =
-                new THREE.Mesh(
-                    new THREE.CapsuleGeometry(
-                        0.6,
-                        1.4,
-                        6,
-                        10
-                    ),
-                    new THREE.MeshStandardMaterial({
-                        color: data.color
-                    })
+                createEnemyMesh(
+                    enemy,
+                    data
                 );
-
-            enemy.mesh.scale.setScalar(
-                data.scale
-            );
-
-            enemy.mesh.position.copy(
-                enemy.position
-            );
 
             scene.add(
                 enemy.mesh
             );
 
+            if (
+                enemy.healthBarContainer
+            ) {
+
+                enemy.healthBarContainer.style.display =
+                    "block";
+            }
+
             enemy.alive = true;
 
             enemy.attackCooldown = 0;
-
-            createEnemyHealthBar(
-                enemy
-            );
 
             showMessage(
                 `${data.name} ist wieder da!`
@@ -1241,35 +1101,28 @@ function updateRespawns(delta) {
 function attack() {
 
     if (
-        player.attackCooldown > 0 ||
-        player.attacking
+        player.attackCooldown > 0
     ) {
-
         return;
     }
 
     player.attackCooldown =
         0.55;
 
-    player.attacking = true;
+    sword.rotation.x =
+        -0.9;
 
-    // Schwert sauber nach vorne schwingen
     sword.rotation.z =
-        -Math.PI * 0.9;
-
-    characterParts.rightArm.rotation.x =
         -0.8;
 
     setTimeout(() => {
 
-        sword.rotation.z = 0;
+        sword.rotation.x = 0;
 
-        characterParts.rightArm.rotation.x =
-            0;
+        sword.rotation.z =
+            -0.35;
 
-        player.attacking = false;
-
-    }, 220);
+    }, 180);
 
     const attackDirection =
         new THREE.Vector3(
@@ -1286,8 +1139,6 @@ function attack() {
         ),
         cameraYaw
     );
-
-    let hit = false;
 
     for (
         const enemy of enemies
@@ -1307,7 +1158,9 @@ function attack() {
         const distance =
             difference.length();
 
-        if (distance > 4) {
+        if (
+            distance > 4
+        ) {
             continue;
         }
 
@@ -1318,23 +1171,17 @@ function attack() {
                 difference
             );
 
-        if (dot > 0.2) {
+        if (
+            dot > 0.25
+        ) {
 
             damageEnemy(
                 enemy,
                 player.weaponDamage
             );
-
-            hit = true;
         }
     }
-
-    // Keine VERFEHLT-Meldung.
 }
-
-// =====================================================
-// GEGNER SCHADEN
-// =====================================================
 
 function damageEnemy(
     enemy,
@@ -1343,22 +1190,16 @@ function damageEnemy(
 
     enemy.health -= damage;
 
-    updateEnemyHealthBar(
-        enemy
-    );
-
     if (
         enemy.health <= 0
     ) {
 
-        killEnemy(
-            enemy
-        );
+        killEnemy(enemy);
     }
 }
 
 // =====================================================
-// GEGNER KI
+// GEGNER-KI
 // =====================================================
 
 function updateEnemies(delta) {
@@ -1381,7 +1222,9 @@ function updateEnemies(delta) {
         const distance =
             direction.length();
 
-        if (distance > 2.5) {
+        if (
+            distance > 2.2
+        ) {
 
             direction.normalize();
 
@@ -1423,10 +1266,6 @@ function updateEnemies(delta) {
         enemy.mesh.position.copy(
             enemy.position
         );
-
-        updateEnemyHealthBar(
-            enemy
-        );
     }
 }
 
@@ -1434,16 +1273,22 @@ function updateEnemies(delta) {
 // SPIELER SCHADEN
 // =====================================================
 
-function damagePlayer(
-    damage
-) {
+function damagePlayer(damage) {
 
-    player.health -= damage;
+    const reducedDamage =
+        Math.max(
+            1,
+            damage -
+            player.armorBonus
+        );
+
+    player.health -=
+        reducedDamage;
 
     player.health =
         Math.max(
-            0,
-            player.health
+            player.health,
+            0
         );
 
     updateHUD();
@@ -1478,6 +1323,10 @@ function usePotion() {
         player.maxHealth
     ) {
 
+        showMessage(
+            "Du bist bereits voll geheilt!"
+        );
+
         return;
     }
 
@@ -1489,7 +1338,13 @@ function usePotion() {
             player.health + 40
         );
 
+    showMessage(
+        "+40 HP"
+    );
+
     updateHUD();
+
+    saveGame(false);
 }
 
 // =====================================================
@@ -1555,13 +1410,16 @@ function toggleInventory() {
         `<p>⭐ Level: ${player.level}</p>`;
 
     html +=
-        `<p>⭐ XP: ${player.xp}/${player.xpToNextLevel}</p>`;
+        `<p>XP: ${player.xp}/${player.xpToNextLevel}</p>`;
 
     html +=
         `<p>🪙 Gold: ${player.gold}</p>`;
 
     html +=
-        `<p>⚔️ Eisenschwert – Schaden ${player.weaponDamage}</p>`;
+        `<p>⚔️ Waffe: ${player.weapon}</p>`;
+
+    html +=
+        `<p>🛡️ Rüstung: ${player.armor}</p>`;
 
     html += `<hr>`;
 
@@ -1574,9 +1432,12 @@ function toggleInventory() {
     }
 
     html +=
-        `<button id="closeInventory">Schließen</button>`;
+        `<button id="closeInventory">
+            Schließen
+        </button>`;
 
-    menu.innerHTML = html;
+    menu.innerHTML =
+        html;
 
     document.body.appendChild(
         menu
@@ -1590,6 +1451,118 @@ function toggleInventory() {
 
             menu.remove();
         };
+}
+
+// =====================================================
+// SPEICHERN
+// =====================================================
+
+function saveGame(show = true) {
+
+    const saveData = {
+
+        player: {
+
+            health:
+                player.health,
+
+            maxHealth:
+                player.maxHealth,
+
+            level:
+                player.level,
+
+            xp:
+                player.xp,
+
+            xpToNextLevel:
+                player.xpToNextLevel,
+
+            gold:
+                player.gold,
+
+            weapon:
+                player.weapon,
+
+            weaponDamage:
+                player.weaponDamage,
+
+            armor:
+                player.armor,
+
+            armorBonus:
+                player.armorBonus,
+
+            x:
+                player.position.x,
+
+            y:
+                player.position.y,
+
+            z:
+                player.position.z
+        },
+
+        inventory
+    };
+
+    localStorage.setItem(
+        "kingdomsBeyondSave",
+        JSON.stringify(saveData)
+    );
+
+    if (show) {
+
+        showMessage(
+            "💾 Spiel gespeichert"
+        );
+    }
+}
+
+// =====================================================
+// LADEN
+// =====================================================
+
+function loadGame() {
+
+    const raw =
+        localStorage.getItem(
+            "kingdomsBeyondSave"
+        );
+
+    if (!raw) {
+        return;
+    }
+
+    try {
+
+        const data =
+            JSON.parse(raw);
+
+        Object.assign(
+            player,
+            data.player
+        );
+
+        Object.assign(
+            inventory,
+            data.inventory
+        );
+
+        player.position.set(
+            data.player.x,
+            data.player.y,
+            data.player.z
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Save konnte nicht geladen werden:",
+            error
+        );
+    }
 }
 
 // =====================================================
@@ -1695,17 +1668,18 @@ function updateHUD() {
 
         🪙 ${player.gold} Gold<br>
 
-        ⚔️ Eisenschwert<br>
+        ⚔️ ${player.weapon}<br>
 
-        🗡️ Schaden: ${player.weaponDamage}<br>
+        🛡️ ${player.armor}<br>
 
         🎒 ${inventory["Heiltrank"]} Heiltrank<br>
 
-        👾 Gegner: ${
+        👾 Gegner:
+        ${
             enemies.filter(
                 e => e.alive
             ).length
-        }
+        }/${MAX_ENEMIES}
 
     `;
 
@@ -1714,8 +1688,56 @@ function updateHUD() {
             player.health /
             player.maxHealth *
             100
-        ) +
-        "%";
+        ) + "%";
+}
+
+// =====================================================
+// GEGNER-LEBENSBALKEN AKTUALISIEREN
+// =====================================================
+
+function updateEnemyHealthBars() {
+
+    for (
+        const enemy of enemies
+    ) {
+
+        if (
+            !enemy.alive ||
+            !enemy.healthBarContainer
+        ) {
+            continue;
+        }
+
+        const position =
+            enemy.position.clone();
+
+        position.y +=
+            3.2;
+
+        position.project(camera);
+
+        const x =
+            (position.x * 0.5 + 0.5) *
+            window.innerWidth;
+
+        const y =
+            (-position.y * 0.5 + 0.5) *
+            window.innerHeight;
+
+        enemy.healthBarContainer.style.left =
+            `${x - 35}px`;
+
+        enemy.healthBarContainer.style.top =
+            `${y}px`;
+
+        enemy.healthBar.style.width =
+            Math.max(
+                0,
+                enemy.health /
+                enemy.maxHealth *
+                100
+            ) + "%";
+    }
 }
 
 // =====================================================
@@ -1739,7 +1761,7 @@ function showMessage(text) {
         "50%";
 
     message.style.top =
-        "35%";
+        "40%";
 
     message.style.transform =
         "translate(-50%, -50%)";
@@ -1767,7 +1789,7 @@ function showMessage(text) {
 
         message.remove();
 
-    }, 1000);
+    }, 900);
 }
 
 // =====================================================
@@ -1776,21 +1798,7 @@ function showMessage(text) {
 
 function gameOver() {
 
-    if (
-        document.getElementById(
-            "gameOver"
-        )
-    ) {
-
-        return;
-    }
-
-    if (
-        document.exitPointerLock
-    ) {
-
-        document.exitPointerLock();
-    }
+    document.exitPointerLock();
 
     const screen =
         document.createElement(
@@ -1807,7 +1815,7 @@ function gameOver() {
         "0";
 
     screen.style.background =
-        "rgba(0,0,0,0.88)";
+        "rgba(0,0,0,0.85)";
 
     screen.style.display =
         "flex";
@@ -1845,6 +1853,7 @@ function gameOver() {
         >
             Erneut versuchen
         </button>
+
     `;
 
     document.body.appendChild(
@@ -1874,42 +1883,50 @@ window.addEventListener(
         keys[event.code] = true;
 
         if (
-            event.code ===
-            "Space" &&
+            event.code === "Space" &&
             player.onGround
         ) {
 
-            event.preventDefault();
+            player.velocityY = 10;
 
-            player.velocityY =
-                10;
-
-            player.onGround =
-                false;
+            player.onGround = false;
         }
 
         if (
-            event.code ===
-            "KeyE"
+            event.code === "KeyE"
         ) {
 
             attack();
         }
 
         if (
-            event.code ===
-            "KeyI"
+            event.code === "KeyI"
         ) {
 
             toggleInventory();
         }
 
         if (
-            event.code ===
-            "KeyH"
+            event.code === "KeyH"
         ) {
 
             usePotion();
+        }
+
+        if (
+            event.code === "F5"
+        ) {
+
+            event.preventDefault();
+
+            saveGame();
+        }
+
+        if (
+            event.code === "F9"
+        ) {
+
+            loadGame();
         }
     }
 );
@@ -1918,8 +1935,7 @@ window.addEventListener(
     "keyup",
     event => {
 
-        keys[event.code] =
-            false;
+        keys[event.code] = false;
     }
 );
 
@@ -1936,19 +1952,16 @@ document.addEventListener(
     event => {
 
         if (
-            event.target.closest(
-                "#inventoryMenu"
-            )
+            event.target.id === "restart"
         ) {
-
             return;
         }
 
         if (
-            event.target.id ===
-            "restart"
+            event.target.closest(
+                "#inventoryMenu"
+            )
         ) {
-
             return;
         }
 
@@ -1964,7 +1977,6 @@ document.addEventListener(
             document.pointerLockElement !==
             document.body
         ) {
-
             return;
         }
 
@@ -1986,7 +1998,7 @@ document.addEventListener(
 );
 
 // =====================================================
-// SPIELERBEWEGUNG
+// SPIELER BEWEGUNG
 // =====================================================
 
 function updatePlayer(delta) {
@@ -2041,43 +2053,22 @@ function updatePlayer(delta) {
             speed *
             delta;
 
-        // Körper dreht sich in Bewegungsrichtung
         playerMesh.rotation.y =
-            Math.atan2(
-                direction.x,
-                direction.z
-            );
-
-        // einfache Laufbewegung
-        if (!player.attacking) {
-
-            const walk =
-                Math.sin(
-                    performance.now() *
-                    0.012
-                ) * 0.35;
-
-            characterParts.leftArm.rotation.x =
-                walk;
-
-            characterParts.rightArm.rotation.x =
-                -walk;
-        }
+            cameraYaw;
     }
 
     player.velocityY -=
-        25 *
-        delta;
+        25 * delta;
 
     player.position.y +=
         player.velocityY *
         delta;
 
     if (
-        player.position.y <= 1
+        player.position.y <= 0
     ) {
 
-        player.position.y = 1;
+        player.position.y = 0;
 
         player.velocityY = 0;
 
@@ -2098,12 +2089,12 @@ function updateCamera() {
     const target =
         player.position.clone();
 
-    target.y += 1.3;
+    target.y += 1.5;
 
     const offset =
         new THREE.Vector3(
             0,
-            2.2,
+            2.5,
             8
         );
 
@@ -2128,7 +2119,7 @@ function updateCamera() {
 }
 
 // =====================================================
-// RESIZE
+// FENSTERGRÖSSE
 // =====================================================
 
 window.addEventListener(
@@ -2185,6 +2176,8 @@ function gameLoop() {
 
     updateHUD();
 
+    updateEnemyHealthBars();
+
     renderer.render(
         scene,
         camera
@@ -2194,6 +2187,12 @@ function gameLoop() {
 // =====================================================
 // START
 // =====================================================
+
+loadGame();
+
+playerMesh.position.copy(
+    player.position
+);
 
 updateHUD();
 
