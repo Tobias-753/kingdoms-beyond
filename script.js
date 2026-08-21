@@ -1,32 +1,52 @@
 import * as THREE from "three";
 
-// =====================================================
+// ============================================================
 // KINGDOMS BEYOND 0.7
-// BURG + TOR + HÄNDLER + SHOP + WAFFEN + RÜSTUNG
-// SICHERER BURGHOF + WALD + RUINE + SPEICHERN
-// =====================================================
+// ============================================================
+// - Detailliertere humanoide Charaktere
+// - Unterschiedliche Gegnerkörper
+// - Burg mit Innenhof
+// - Händler + Shop
+// - Waffen kaufen UND alte Waffen behalten
+// - Waffen aus Inventar ausrüsten
+// - Rüstungen kaufen und wechseln
+// - Burgtor / Ausgang
+// - Sicherheitsbereich Burg
+// - Kollisionen mit Wänden und Objekten
+// - Speichern / Laden
+// ============================================================
+
+
+// ============================================================
+// SZENE
+// ============================================================
 
 const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 45, 220);
+
+scene.fog = new THREE.Fog(
+    0x87ceeb,
+    55,
+    190
+);
 
 
-// =====================================================
+// ============================================================
 // KAMERA
-// =====================================================
+// ============================================================
 
 const camera = new THREE.PerspectiveCamera(
-    75,
+    70,
     window.innerWidth / window.innerHeight,
     0.1,
     500
 );
 
 
-// =====================================================
+// ============================================================
 // RENDERER
-// =====================================================
+// ============================================================
 
 const renderer = new THREE.WebGLRenderer({
     antialias: true
@@ -43,374 +63,260 @@ renderer.setPixelRatio(
 
 renderer.shadowMap.enabled = true;
 
-document.body.appendChild(renderer.domElement);
+document.body.appendChild(
+    renderer.domElement
+);
 
 
-// =====================================================
+// ============================================================
 // LICHT
-// =====================================================
+// ============================================================
 
 scene.add(
     new THREE.HemisphereLight(
         0xffffff,
-        0x444444,
-        2
+        0x405040,
+        2.2
     )
 );
 
 const sun = new THREE.DirectionalLight(
     0xffffff,
-    2
+    2.5
 );
 
-sun.position.set(50, 100, 40);
+sun.position.set(
+    50,
+    90,
+    30
+);
+
 sun.castShadow = true;
 
 scene.add(sun);
 
 
-// =====================================================
+// ============================================================
 // BODEN
-// =====================================================
+// ============================================================
 
 const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(300, 300),
+    new THREE.PlaneGeometry(
+        320,
+        320
+    ),
     new THREE.MeshStandardMaterial({
-        color: 0x3f6b35
+        color: 0x416b37
     })
 );
 
 ground.rotation.x = -Math.PI / 2;
+
 ground.receiveShadow = true;
 
 scene.add(ground);
 
 
-// =====================================================
-// SPIELER
-// =====================================================
+// ============================================================
+// MATERIALIEN
+// ============================================================
 
-const player = {
+const materials = {
 
-    position: new THREE.Vector3(0, 1, 15),
+    skin:
+        new THREE.MeshStandardMaterial({
+            color: 0xc98f72
+        }),
 
-    velocityY: 0,
+    skinDark:
+        new THREE.MeshStandardMaterial({
+            color: 0x8e5c47
+        }),
 
-    speed: 7,
+    hair:
+        new THREE.MeshStandardMaterial({
+            color: 0x3a2418
+        }),
 
-    runningSpeed: 13,
+    shirt:
+        new THREE.MeshStandardMaterial({
+            color: 0x315d8c
+        }),
 
-    onGround: true,
+    shirtDark:
+        new THREE.MeshStandardMaterial({
+            color: 0x233c5c
+        }),
 
-    health: 100,
+    pants:
+        new THREE.MeshStandardMaterial({
+            color: 0x292d35
+        }),
 
-    maxHealth: 100,
+    boots:
+        new THREE.MeshStandardMaterial({
+            color: 0x241811
+        }),
 
-    level: 1,
+    metal:
+        new THREE.MeshStandardMaterial({
+            color: 0x9da5ad,
+            metalness: 0.75,
+            roughness: 0.25
+        }),
 
-    xp: 0,
+    darkMetal:
+        new THREE.MeshStandardMaterial({
+            color: 0x343b45,
+            metalness: 0.8,
+            roughness: 0.3
+        }),
 
-    xpToNextLevel: 100,
+    gold:
+        new THREE.MeshStandardMaterial({
+            color: 0xd6a72c,
+            metalness: 0.75
+        }),
 
-    gold: 100,
+    red:
+        new THREE.MeshStandardMaterial({
+            color: 0x8d2424
+        }),
 
-    attackCooldown: 0,
+    leather:
+        new THREE.MeshStandardMaterial({
+            color: 0x65402b
+        }),
 
-    weapon: "Eisenschwert",
+    white:
+        new THREE.MeshStandardMaterial({
+            color: 0xe8e8e8
+        }),
 
-    weaponDamage: 25,
-
-    armor: "Keine Rüstung",
-
-    armorBonus: 0
+    black:
+        new THREE.MeshStandardMaterial({
+            color: 0x151515
+        })
 
 };
 
 
-// =====================================================
-// INVENTAR
-// =====================================================
+// ============================================================
+// HILFSFUNKTIONEN
+// ============================================================
 
-const inventory = {
+function box(
+    x,
+    y,
+    z,
+    material
+) {
 
-    "Heiltrank": 3,
+    const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            x,
+            y,
+            z
+        ),
+        material
+    );
 
-    "Eisenschwert": 1,
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
 
-    "Stahlschwert": 0,
+    return mesh;
 
-    "Ritterschwert": 0,
-
-    "Lederrüstung": 0,
-
-    "Eisenrüstung": 0
-
-};
-
-
-// =====================================================
-// SPIELER-MODELL
-// =====================================================
-
-const playerMesh = new THREE.Group();
-
-
-// Körper
-const body = new THREE.Mesh(
-    new THREE.CapsuleGeometry(
-        0.5,
-        1.15,
-        4,
-        8
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0x315a91
-    })
-);
-
-body.position.y = 1.35;
-body.castShadow = true;
-
-playerMesh.add(body);
+}
 
 
-// Kopf
-const head = new THREE.Mesh(
-    new THREE.SphereGeometry(
-        0.38,
-        16,
-        16
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0xf0c7a0
-    })
-);
+function sphere(
+    radius,
+    material
+) {
 
-head.position.y = 2.25;
-head.castShadow = true;
+    const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(
+            radius,
+            16,
+            12
+        ),
+        material
+    );
 
-playerMesh.add(head);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
 
+    return mesh;
 
-// Haare
-const hair = new THREE.Mesh(
-    new THREE.SphereGeometry(
-        0.4,
-        16,
-        8,
-        0,
-        Math.PI * 2,
-        0,
-        Math.PI / 2
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0x3b2415
-    })
-);
-
-hair.position.y = 2.42;
-
-playerMesh.add(hair);
+}
 
 
-// Arme
-function createArm(x) {
+function cylinder(
+    radiusTop,
+    radiusBottom,
+    height,
+    material
+) {
 
-    const arm = new THREE.Mesh(
-        new THREE.CapsuleGeometry(
-            0.14,
+    const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            radiusTop,
+            radiusBottom,
+            height,
+            12
+        ),
+        material
+    );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    return mesh;
+
+}
+
+
+// ============================================================
+// WELT-DEKORATION
+// ============================================================
+
+function createTree(
+    x,
+    z
+) {
+
+    const tree =
+        new THREE.Group();
+
+    const trunk =
+        cylinder(
+            0.45,
             0.65,
             4,
-            8
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x315a91
-        })
-    );
-
-    arm.position.set(
-        x,
-        1.45,
-        0
-    );
-
-    arm.rotation.z =
-        x > 0 ? -0.15 : 0.15;
-
-    arm.castShadow = true;
-
-    return arm;
-}
-
-playerMesh.add(createArm(0.62));
-playerMesh.add(createArm(-0.62));
-
-
-// Beine
-function createLeg(x) {
-
-    const leg = new THREE.Mesh(
-        new THREE.CapsuleGeometry(
-            0.16,
-            0.75,
-            4,
-            8
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x202a38
-        })
-    );
-
-    leg.position.set(
-        x,
-        0.55,
-        0
-    );
-
-    leg.castShadow = true;
-
-    return leg;
-}
-
-playerMesh.add(createLeg(0.25));
-playerMesh.add(createLeg(-0.25));
-
-
-playerMesh.position.copy(
-    player.position
-);
-
-scene.add(playerMesh);
-
-
-// =====================================================
-// SCHWERT
-// =====================================================
-
-const sword = new THREE.Group();
-
-const blade = new THREE.Mesh(
-    new THREE.BoxGeometry(
-        0.14,
-        2.4,
-        0.32
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0xdce5e8,
-        metalness: 0.85,
-        roughness: 0.2
-    })
-);
-
-blade.position.y = 1.25;
-
-sword.add(blade);
-
-
-const handle = new THREE.Mesh(
-    new THREE.BoxGeometry(
-        0.18,
-        0.75,
-        0.18
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0x5d4037
-    })
-);
-
-handle.position.y = -0.3;
-
-sword.add(handle);
-
-
-const guard = new THREE.Mesh(
-    new THREE.BoxGeometry(
-        0.75,
-        0.12,
-        0.16
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0xb08d35,
-        metalness: 0.7
-    })
-);
-
-guard.position.y = 0.05;
-
-sword.add(guard);
-
-
-// Schwert zeigt nach vorne
-sword.rotation.z = 0;
-
-sword.position.set(
-    0.72,
-    1.35,
-    -0.05
-);
-
-playerMesh.add(sword);
-
-
-// =====================================================
-// WELT-OBJEKTE
-// =====================================================
-
-const worldColliders = [];
-
-function addCollider(mesh, width, depth) {
-
-    worldColliders.push({
-        mesh,
-        width,
-        depth
-    });
-
-}
-
-
-// =====================================================
-// BÄUME
-// =====================================================
-
-function createTree(x, z) {
-
-    const tree = new THREE.Group();
-
-    const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            0.45,
-            0.7,
-            4,
-            8
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x6b3f22
-        })
-    );
+            materials.leather
+        );
 
     trunk.position.y = 2;
-    trunk.castShadow = true;
 
     tree.add(trunk);
 
-
-    const leaves = new THREE.Mesh(
-        new THREE.ConeGeometry(
-            2.5,
-            6,
-            8
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x1f5c2e
-        })
-    );
+    const leaves =
+        new THREE.Mesh(
+            new THREE.ConeGeometry(
+                2.7,
+                6,
+                10
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x205a2d
+            })
+        );
 
     leaves.position.y = 6;
+
     leaves.castShadow = true;
 
     tree.add(leaves);
-
 
     tree.position.set(
         x,
@@ -420,7 +326,6 @@ function createTree(x, z) {
 
     scene.add(tree);
 
-    addCollider(tree, 1.5, 1.5);
 }
 
 
@@ -429,8 +334,8 @@ function createTree(x, z) {
     [10, -20],
     [25, -5],
     [-25, 10],
-    [20, 25],
-    [-10, 30],
+    [20, 20],
+    [-10, 25],
     [35, 15],
     [-35, -20],
     [5, 35],
@@ -438,9 +343,7 @@ function createTree(x, z) {
     [40, -15],
     [-40, 10],
     [15, 40],
-    [-20, 40],
-    [50, 5],
-    [-50, -5]
+    [-20, 40]
 ].forEach(p => {
 
     createTree(
@@ -451,21 +354,21 @@ function createTree(x, z) {
 });
 
 
-// =====================================================
-// FELSEN
-// =====================================================
+function createRock(
+    x,
+    z
+) {
 
-function createRock(x, z) {
-
-    const rock = new THREE.Mesh(
-        new THREE.DodecahedronGeometry(
-            1.5,
-            0
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x777777
-        })
-    );
+    const rock =
+        new THREE.Mesh(
+            new THREE.DodecahedronGeometry(
+                1.5,
+                0
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x777777
+            })
+        );
 
     rock.position.set(
         x,
@@ -479,11 +382,6 @@ function createRock(x, z) {
 
     scene.add(rock);
 
-    addCollider(
-        rock,
-        2.5,
-        2.5
-    );
 }
 
 
@@ -506,15 +404,27 @@ function createRock(x, z) {
 });
 
 
-// =====================================================
+// ============================================================
 // BURG
-// =====================================================
+// ============================================================
 
-const castle = new THREE.Group();
+const castle = {
+
+    minX: -16,
+    maxX: 16,
+
+    minZ: -18,
+    maxZ: 12,
+
+    safeRadius: 28
+
+};
 
 
-// Mauern
-function createWall(
+const castleWalls = [];
+
+
+function createCastleWall(
     x,
     y,
     z,
@@ -523,16 +433,13 @@ function createWall(
     depth
 ) {
 
-    const wall = new THREE.Mesh(
-        new THREE.BoxGeometry(
+    const wall =
+        box(
             width,
             height,
-            depth
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x777b82
-        })
-    );
+            depth,
+            materials.darkMetal
+        );
 
     wall.position.set(
         x,
@@ -540,579 +447,1088 @@ function createWall(
         z
     );
 
-    wall.castShadow = true;
+    scene.add(wall);
 
-    castle.add(wall);
-
-    addCollider(
-        wall,
+    castleWalls.push({
+        x,
+        z,
         width,
         depth
-    );
+    });
 
     return wall;
+
 }
 
 
-// Nordwand
-createWall(
+// Hintere Wand
+createCastleWall(
     0,
-    4,
-    -25,
-    50,
-    8,
+    5,
+    -18,
+    34,
+    10,
     2
 );
 
 
-// Südwand mit Toröffnung
-createWall(
-    -17,
-    4,
-    25,
-    16,
-    8,
-    2
-);
-
-createWall(
-    17,
-    4,
-    25,
-    16,
-    8,
-    2
-);
-
-
-// Seitenwände
-createWall(
-    -25,
-    4,
-    0,
+// Linke Wand
+createCastleWall(
+    -16,
+    5,
+    -3,
     2,
-    8,
-    50
+    10,
+    30
 );
 
-createWall(
-    25,
-    4,
-    0,
+
+// Rechte Wand
+createCastleWall(
+    16,
+    5,
+    -3,
     2,
-    8,
-    50
+    10,
+    30
 );
 
 
-// =====================================================
-// BURGTÜRME
-// =====================================================
+// Vorderwand mit Torbereichen
+createCastleWall(
+    -11,
+    5,
+    12,
+    10,
+    10,
+    2
+);
 
-function createTower(x, z) {
-
-    const tower = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            4,
-            4,
-            12,
-            12
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x656970
-        })
-    );
-
-    tower.position.set(
-        x,
-        6,
-        z
-    );
-
-    tower.castShadow = true;
-
-    castle.add(tower);
-
-    addCollider(
-        tower,
-        7,
-        7
-    );
+createCastleWall(
+    11,
+    5,
+    12,
+    10,
+    10,
+    2
+);
 
 
-    const roof = new THREE.Mesh(
-        new THREE.ConeGeometry(
-            4.8,
-            4,
-            12
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x4b2020
-        })
-    );
-
-    roof.position.set(
-        x,
-        14,
-        z
-    );
-
-    roof.castShadow = true;
-
-    castle.add(roof);
-}
-
-
-createTower(-21, -21);
-createTower(21, -21);
-createTower(-21, 21);
-createTower(21, 21);
-
-
-// =====================================================
-// TOR
-// =====================================================
+// ============================================================
+// BURGTOR
+// ============================================================
 
 const gate = new THREE.Group();
 
-const gateFrameMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x55585c
-    });
-
-
-const gateLeft = new THREE.Mesh(
-    new THREE.BoxGeometry(
-        2,
+const gateLeft =
+    box(
+        5,
         8,
-        2
-    ),
-    gateFrameMaterial
-);
+        1,
+        materials.leather
+    );
 
 gateLeft.position.set(
-    -5,
+    -2.5,
     4,
-    25
+    12
 );
 
 gate.add(gateLeft);
 
 
-const gateRight = new THREE.Mesh(
-    new THREE.BoxGeometry(
-        2,
+const gateRight =
+    box(
+        5,
         8,
-        2
-    ),
-    gateFrameMaterial
-);
+        1,
+        materials.leather
+    );
 
 gateRight.position.set(
-    5,
+    2.5,
     4,
-    25
+    12
 );
 
 gate.add(gateRight);
 
 
-// Torbogen
-const gateTop = new THREE.Mesh(
-    new THREE.BoxGeometry(
-        12,
+const gateTop =
+    box(
+        10,
         2,
-        2
-    ),
-    gateFrameMaterial
-);
+        1,
+        materials.darkMetal
+    );
 
 gateTop.position.set(
     0,
-    8,
-    25
+    9,
+    12
 );
 
 gate.add(gateTop);
 
-
-// Holztor seitlich sichtbar
-const door = new THREE.Mesh(
-    new THREE.BoxGeometry(
-        8,
-        7,
-        0.5
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0x5a351e
-    })
-);
-
-door.position.set(
-    0,
-    3.5,
-    25.8
-);
-
-
-// Das Tor ist offen.
-// Deshalb wird es NICHT als Collider hinzugefügt.
-
-gate.add(door);
-
 scene.add(gate);
 
 
-// Ausgangsschild
-const exitText = document.createElement("div");
+// ============================================================
+// BURGTÜRME
+// ============================================================
 
-exitText.textContent =
-    "🚪 AUSGANG";
+function createTower(
+    x,
+    z
+) {
 
-exitText.style.position =
-    "fixed";
+    const tower =
+        cylinder(
+            3,
+            3.2,
+            13,
+            materials.darkMetal
+        );
 
-exitText.style.left =
-    "50%";
+    tower.position.set(
+        x,
+        6.5,
+        z
+    );
 
-exitText.style.top =
-    "25%";
+    scene.add(tower);
 
-exitText.style.transform =
-    "translateX(-50%)";
+    const roof =
+        new THREE.Mesh(
+            new THREE.ConeGeometry(
+                3.8,
+                5,
+                8
+            ),
+            materials.red
+        );
 
-exitText.style.color =
-    "white";
+    roof.position.set(
+        x,
+        15,
+        z
+    );
 
-exitText.style.fontSize =
-    "20px";
+    roof.castShadow = true;
 
-exitText.style.fontWeight =
-    "bold";
+    scene.add(roof);
 
-exitText.style.textShadow =
-    "2px 2px 4px black";
-
-exitText.style.zIndex =
-    "15";
-
-exitText.style.display =
-    "none";
-
-document.body.appendChild(
-    exitText
-);
+}
 
 
-// =====================================================
-// BURGHOF
-// =====================================================
+createTower(-16, -18);
+createTower(16, -18);
+createTower(-16, 12);
+createTower(16, 12);
 
-const courtyard = new THREE.Mesh(
-    new THREE.PlaneGeometry(
-        42,
-        42
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0x77716a
-    })
-);
 
-courtyard.rotation.x =
-    -Math.PI / 2;
+// ============================================================
+// HOF
+// ============================================================
+
+const courtyard =
+    box(
+        20,
+        0.2,
+        17,
+        new THREE.MeshStandardMaterial({
+            color: 0x77736a
+        })
+    );
 
 courtyard.position.set(
     0,
-    0.015,
-    0
+    0.1,
+    -3
 );
 
 scene.add(courtyard);
 
 
-// =====================================================
-// BURG-INNENGEBÄUDE
-// =====================================================
+// ============================================================
+// SPIELER-DATEN
+// ============================================================
 
-function createBuilding(
-    x,
-    z,
-    width,
-    depth,
-    height
-) {
+const player = {
 
-    const building =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                width,
-                height,
-                depth
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x8a8d91
-            })
-        );
-
-    building.position.set(
-        x,
-        height / 2,
-        z
-    );
-
-    building.castShadow = true;
-
-    scene.add(building);
-
-    addCollider(
-        building,
-        width,
-        depth
-    );
-
-
-    const roof =
-        new THREE.Mesh(
-            new THREE.ConeGeometry(
-                Math.max(width, depth) * 0.7,
-                4,
-                4
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x4b2020
-            })
-        );
-
-    roof.position.set(
-        x,
-        height + 2,
-        z
-    );
-
-    roof.rotation.y =
-        Math.PI / 4;
-
-    scene.add(roof);
-}
-
-
-createBuilding(
-    0,
-    -12,
-    14,
-    8,
-    7
-);
-
-
-// =====================================================
-// HÄNDLER
-// =====================================================
-
-const merchant = new THREE.Group();
-
-const merchantBody =
-    new THREE.Mesh(
-        new THREE.CapsuleGeometry(
-            0.45,
-            1.1,
-            4,
-            8
+    position:
+        new THREE.Vector3(
+            0,
+            0,
+            25
         ),
-        new THREE.MeshStandardMaterial({
-            color: 0x6b3fa0
-        })
-    );
 
-merchantBody.position.y = 1.3;
+    velocityY: 0,
 
-merchant.add(merchantBody);
+    speed: 7,
 
+    runningSpeed: 12,
 
-const merchantHead =
-    new THREE.Mesh(
-        new THREE.SphereGeometry(
-            0.38,
-            16,
-            16
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0xe7bd98
-        })
-    );
+    onGround: true,
 
-merchantHead.position.y = 2.2;
+    health: 100,
 
-merchant.add(merchantHead);
+    maxHealth: 100,
 
+    level: 1,
 
-merchant.position.set(
-    0,
-    0,
-    -7
-);
+    xp: 0,
 
-scene.add(merchant);
+    xpToNextLevel: 100,
+
+    gold: 150,
+
+    attackCooldown: 0,
+
+    weapon: "Eisenschwert",
+
+    weaponDamage: 25,
+
+    armor: "Keine Rüstung",
+
+    armorBonus: 0
+
+};
 
 
-// Händler-Schild
-const merchantLabel =
-    document.createElement("div");
+// ============================================================
+// WAFFEN
+// ============================================================
 
-merchantLabel.textContent =
-    "🧑 Händler";
+const weapons = {
 
-merchantLabel.style.position =
-    "fixed";
+    "Eisenschwert": {
 
-merchantLabel.style.left =
-    "50%";
-
-merchantLabel.style.top =
-    "65%";
-
-merchantLabel.style.transform =
-    "translateX(-50%)";
-
-merchantLabel.style.color =
-    "white";
-
-merchantLabel.style.fontWeight =
-    "bold";
-
-merchantLabel.style.textShadow =
-    "2px 2px 4px black";
-
-merchantLabel.style.display =
-    "none";
-
-merchantLabel.style.zIndex =
-    "30";
-
-document.body.appendChild(
-    merchantLabel
-);
-
-
-// =====================================================
-// RUINE
-// =====================================================
-
-const ruin = new THREE.Group();
-
-function ruinWall(
-    x,
-    z,
-    rotation
-) {
-
-    const wall =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                10,
-                5,
-                1.5
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x656565
-            })
-        );
-
-    wall.position.set(
-        x,
-        2.5,
-        z
-    );
-
-    wall.rotation.y =
-        rotation;
-
-    wall.castShadow = true;
-
-    ruin.add(wall);
-
-    addCollider(
-        wall,
-        10,
-        2
-    );
-}
-
-ruinWall(
-    0,
-    0,
-    0
-);
-
-ruinWall(
-    5,
-    5,
-    Math.PI / 2
-);
-
-ruinWall(
-    -5,
-    5,
-    Math.PI / 2
-);
-
-ruin.position.set(
-    60,
-    0,
-    25
-);
-
-scene.add(ruin);
-
-
-// =====================================================
-// GEGNER
-// =====================================================
-
-const enemyTypes = {
-
-    grunt: {
-        name: "Grunt",
-        health: 50,
-        speed: 2.2,
-        damage: 10,
-        xp: 50,
-        color: 0x8b2020,
-        scale: 1
-    },
-
-    runner: {
-        name: "Schneller",
-        health: 35,
-        speed: 4.2,
-        damage: 7,
-        xp: 65,
-        color: 0xc45b20,
-        scale: 0.85
-    },
-
-    tank: {
-        name: "Tank",
-        health: 120,
-        speed: 1.2,
-        damage: 18,
-        xp: 110,
-        color: 0x444466,
-        scale: 1.3
-    },
-
-    elite: {
-        name: "Elite",
-        health: 220,
-        speed: 2,
         damage: 25,
-        xp: 250,
-        color: 0x8e44ad,
-        scale: 1.5
+
+        price: 0,
+
+        color: 0xcfd8dc,
+
+        length: 2.5
+
+    },
+
+    "Stahlschwert": {
+
+        damage: 40,
+
+        price: 100,
+
+        color: 0xb0bec5,
+
+        length: 2.7
+
+    },
+
+    "Langschwert": {
+
+        damage: 60,
+
+        price: 220,
+
+        color: 0xe0e0e0,
+
+        length: 3
+
+    },
+
+    "Königsschwert": {
+
+        damage: 90,
+
+        price: 450,
+
+        color: 0xd4af37,
+
+        length: 3.2
+
     }
 
 };
 
+
+// ============================================================
+// RÜSTUNGEN
+// ============================================================
+
+const armors = {
+
+    "Keine Rüstung": {
+
+        bonus: 0,
+
+        price: 0
+
+    },
+
+    "Lederrüstung": {
+
+        bonus: 5,
+
+        price: 100
+
+    },
+
+    "Eisenrüstung": {
+
+        bonus: 12,
+
+        price: 250
+
+    },
+
+    "Ritterrüstung": {
+
+        bonus: 22,
+
+        price: 500
+
+    }
+
+};
+
+
+// ============================================================
+// INVENTAR
+// ============================================================
+
+const inventory = {
+
+    potions: 3,
+
+    weapons: {
+
+        "Eisenschwert": 1
+
+    },
+
+    armors: {
+
+        "Keine Rüstung": 1
+
+    }
+
+};
+
+
+// ============================================================
+// HELDEN-MODELL
+// ============================================================
+
+const playerMesh =
+    new THREE.Group();
+
+
+// Körper
+const playerBody =
+    box(
+        1.15,
+        1.7,
+        0.7,
+        materials.shirt
+    );
+
+playerBody.position.y = 2.2;
+
+playerMesh.add(playerBody);
+
+
+// Gürtel
+const belt =
+    box(
+        1.2,
+        0.2,
+        0.75,
+        materials.leather
+    );
+
+belt.position.y = 1.55;
+
+playerMesh.add(belt);
+
+
+// Kopf
+const playerHead =
+    sphere(
+        0.55,
+        materials.skin
+    );
+
+playerHead.position.y = 3.65;
+
+playerMesh.add(playerHead);
+
+
+// Haare
+const hair =
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            0.58,
+            16,
+            8,
+            0,
+            Math.PI * 2,
+            0,
+            Math.PI * 0.5
+        ),
+        materials.hair
+    );
+
+hair.position.y = 3.9;
+
+playerMesh.add(hair);
+
+
+// Augen
+const eye1 =
+    sphere(
+        0.055,
+        materials.white
+    );
+
+eye1.position.set(
+    -0.18,
+    3.7,
+    -0.49
+);
+
+playerMesh.add(eye1);
+
+
+const eye2 =
+    sphere(
+        0.055,
+        materials.white
+    );
+
+eye2.position.set(
+    0.18,
+    3.7,
+    -0.49
+);
+
+playerMesh.add(eye2);
+
+
+// Arme
+const leftArm =
+    cylinder(
+        0.18,
+        0.2,
+        1.45,
+        materials.shirt
+    );
+
+leftArm.position.set(
+    -0.78,
+    2.25,
+    0
+);
+
+leftArm.rotation.z =
+    -0.12;
+
+playerMesh.add(leftArm);
+
+
+const rightArm =
+    cylinder(
+        0.18,
+        0.2,
+        1.45,
+        materials.shirt
+    );
+
+rightArm.position.set(
+    0.78,
+    2.25,
+    0
+);
+
+rightArm.rotation.z =
+    0.12;
+
+playerMesh.add(rightArm);
+
+
+// Hände
+const leftHand =
+    sphere(
+        0.2,
+        materials.skin
+    );
+
+leftHand.position.set(
+    -0.82,
+    1.5,
+    0
+);
+
+playerMesh.add(leftHand);
+
+
+const rightHand =
+    sphere(
+        0.2,
+        materials.skin
+    );
+
+rightHand.position.set(
+    0.82,
+    1.5,
+    0
+);
+
+playerMesh.add(rightHand);
+
+
+// Beine
+const leftLeg =
+    box(
+        0.38,
+        1.4,
+        0.42,
+        materials.pants
+    );
+
+leftLeg.position.set(
+    -0.3,
+    0.65,
+    0
+);
+
+playerMesh.add(leftLeg);
+
+
+const rightLeg =
+    box(
+        0.38,
+        1.4,
+        0.42,
+        materials.pants
+    );
+
+rightLeg.position.set(
+    0.3,
+    0.65,
+    0
+);
+
+playerMesh.add(rightLeg);
+
+
+// Stiefel
+const leftBoot =
+    box(
+        0.48,
+        0.35,
+        0.7,
+        materials.boots
+    );
+
+leftBoot.position.set(
+    -0.3,
+    -0.05,
+    -0.12
+);
+
+playerMesh.add(leftBoot);
+
+
+const rightBoot =
+    box(
+        0.48,
+        0.35,
+        0.7,
+        materials.boots
+    );
+
+rightBoot.position.set(
+    0.3,
+    -0.05,
+    -0.12
+);
+
+playerMesh.add(rightBoot);
+
+
+playerMesh.position.copy(
+    player.position
+);
+
+playerMesh.scale.setScalar(
+    0.9
+);
+
+scene.add(playerMesh);
+
+
+// ============================================================
+// SCHWERT
+// ============================================================
+
+const sword =
+    new THREE.Group();
+
+const blade =
+    box(
+        0.16,
+        2.7,
+        0.3,
+        new THREE.MeshStandardMaterial({
+            color:
+                weapons[player.weapon].color,
+            metalness: 0.85,
+            roughness: 0.2
+        })
+    );
+
+blade.position.y = 1.35;
+
+sword.add(blade);
+
+
+const handle =
+    box(
+        0.2,
+        0.75,
+        0.2,
+        materials.leather
+    );
+
+handle.position.y = -0.35;
+
+sword.add(handle);
+
+
+const guard =
+    box(
+        0.9,
+        0.15,
+        0.18,
+        materials.gold
+    );
+
+guard.position.y = 0;
+
+sword.add(guard);
+
+
+// Waffe in rechte Hand
+sword.position.set(
+    0.95,
+    1.5,
+    -0.05
+);
+
+
+// Das Schwert zeigt zunächst nach vorne
+sword.rotation.x =
+    Math.PI / 2;
+
+playerMesh.add(sword);
+
+
+// ============================================================
+// WAFFE AKTUALISIEREN
+// ============================================================
+
+function updateSwordVisual() {
+
+    const data =
+        weapons[player.weapon];
+
+    blade.scale.y =
+        data.length / 2.7;
+
+    blade.material.color.setHex(
+        data.color
+    );
+
+    player.weaponDamage =
+        data.damage;
+
+}
+
+
+// ============================================================
+// GEGNERTYPEN
+// ============================================================
+
+const enemyTypes = {
+
+    grunt: {
+
+        name: "Grunt",
+
+        health: 55,
+
+        speed: 2.1,
+
+        damage: 10,
+
+        xp: 50,
+
+        goldMin: 5,
+
+        goldMax: 15,
+
+        scale: 1
+
+    },
+
+    runner: {
+
+        name: "Runner",
+
+        health: 38,
+
+        speed: 4.2,
+
+        damage: 7,
+
+        xp: 65,
+
+        goldMin: 7,
+
+        goldMax: 18,
+
+        scale: 0.9
+
+    },
+
+    tank: {
+
+        name: "Tank",
+
+        health: 130,
+
+        speed: 1.2,
+
+        damage: 18,
+
+        xp: 110,
+
+        goldMin: 12,
+
+        goldMax: 25,
+
+        scale: 1.25
+
+    },
+
+    elite: {
+
+        name: "Elite",
+
+        health: 230,
+
+        speed: 2,
+
+        damage: 25,
+
+        xp: 250,
+
+        goldMin: 30,
+
+        goldMax: 60,
+
+        scale: 1.3
+
+    }
+
+};
+
+
+// ============================================================
+// GEGNER-MODELL
+// ============================================================
+
+function createEnemyModel(
+    type
+) {
+
+    const group =
+        new THREE.Group();
+
+    const data =
+        enemyTypes[type];
+
+
+    let bodyMaterial =
+        materials.red;
+
+    if (type === "runner") {
+
+        bodyMaterial =
+            new THREE.MeshStandardMaterial({
+                color: 0xc45b20
+            });
+
+    }
+
+    if (type === "tank") {
+
+        bodyMaterial =
+            materials.darkMetal;
+
+    }
+
+    if (type === "elite") {
+
+        bodyMaterial =
+            new THREE.MeshStandardMaterial({
+                color: 0x6d2d8f
+            });
+
+    }
+
+
+    // Körper
+    const body =
+        box(
+            type === "tank" ? 1.5 : 1.05,
+            type === "tank" ? 1.9 : 1.6,
+            0.75,
+            bodyMaterial
+        );
+
+    body.position.y = 2.1;
+
+    group.add(body);
+
+
+    // Kopf
+    const head =
+        sphere(
+            type === "tank"
+                ? 0.62
+                : 0.52,
+            materials.skinDark
+        );
+
+    head.position.y = 3.55;
+
+    group.add(head);
+
+
+    // Augen
+    const e1 =
+        sphere(
+            0.06,
+            materials.red
+        );
+
+    e1.position.set(
+        -0.17,
+        3.62,
+        -0.48
+    );
+
+    group.add(e1);
+
+
+    const e2 =
+        sphere(
+            0.06,
+            materials.red
+        );
+
+    e2.position.set(
+        0.17,
+        3.62,
+        -0.48
+    );
+
+    group.add(e2);
+
+
+    // Arme
+    const armWidth =
+        type === "tank"
+            ? 0.27
+            : 0.19;
+
+    const armLength =
+        type === "tank"
+            ? 1.5
+            : 1.4;
+
+
+    const arm1 =
+        cylinder(
+            armWidth,
+            armWidth,
+            armLength,
+            bodyMaterial
+        );
+
+    arm1.position.set(
+        -0.75,
+        2.2,
+        0
+    );
+
+    arm1.rotation.z =
+        -0.1;
+
+    group.add(arm1);
+
+
+    const arm2 =
+        cylinder(
+            armWidth,
+            armWidth,
+            armLength,
+            bodyMaterial
+        );
+
+    arm2.position.set(
+        0.75,
+        2.2,
+        0
+    );
+
+    arm2.rotation.z =
+        0.1;
+
+    group.add(arm2);
+
+
+    // Beine
+    const leg1 =
+        box(
+            0.4,
+            1.45,
+            0.42,
+            materials.pants
+        );
+
+    leg1.position.set(
+        -0.28,
+        0.65,
+        0
+    );
+
+    group.add(leg1);
+
+
+    const leg2 =
+        box(
+            0.4,
+            1.45,
+            0.42,
+            materials.pants
+        );
+
+    leg2.position.set(
+        0.28,
+        0.65,
+        0
+    );
+
+    group.add(leg2);
+
+
+    // Tank-Rüstung
+    if (
+        type === "tank" ||
+        type === "elite"
+    ) {
+
+        const shoulder1 =
+            sphere(
+                0.38,
+                materials.metal
+            );
+
+        shoulder1.position.set(
+            -0.82,
+            2.8,
+            0
+        );
+
+        group.add(
+            shoulder1
+        );
+
+
+        const shoulder2 =
+            sphere(
+                0.38,
+                materials.metal
+            );
+
+        shoulder2.position.set(
+            0.82,
+            2.8,
+            0
+        );
+
+        group.add(
+            shoulder2
+        );
+
+    }
+
+
+    // Elite-Krone
+    if (
+        type === "elite"
+    ) {
+
+        const crown =
+            new THREE.Group();
+
+        for (
+            let i = -1;
+            i <= 1;
+            i++
+        ) {
+
+            const spike =
+                new THREE.Mesh(
+                    new THREE.ConeGeometry(
+                        0.13,
+                        0.55,
+                        5
+                    ),
+                    materials.gold
+                );
+
+            spike.position.set(
+                i * 0.22,
+                4.15,
+                0
+            );
+
+            crown.add(spike);
+
+        }
+
+        group.add(crown);
+
+    }
+
+
+    group.scale.setScalar(
+        data.scale
+    );
+
+    return group;
+
+}
+
+
+// ============================================================
+// GEGNER
+// ============================================================
 
 const enemies = [];
 
@@ -1123,16 +1539,14 @@ const RESPAWN_TIME = 15;
 
 const spawnPoints = [
 
-    [12, 2],
-    [-15, -10],
-    [20, 15],
-    [-20, 20],
-    [30, -15],
-    [-30, 15],
+    [40, -15],
+    [-40, 15],
     [35, 30],
     [-35, -30],
-    [55, 15],
-    [70, 35]
+    [30, 25],
+    [-30, -20],
+    [45, 5],
+    [-45, -5]
 
 ];
 
@@ -1146,89 +1560,50 @@ function chooseEnemyType() {
         player.level >= 3 &&
         roll < 0.08
     ) {
+
         return "elite";
+
     }
 
-    if (roll < 0.25) {
+    if (
+        roll < 0.25
+    ) {
+
         return "runner";
+
     }
 
-    if (roll < 0.42) {
+    if (
+        roll < 0.42
+    ) {
+
         return "tank";
+
     }
 
     return "grunt";
+
 }
 
 
-// =====================================================
-// GEGNER ERSTELLEN
-// =====================================================
-
-function createEnemyMesh(data) {
-
-    const group =
-        new THREE.Group();
-
-
-    const body =
-        new THREE.Mesh(
-            new THREE.CapsuleGeometry(
-                0.6,
-                1.4,
-                4,
-                8
-            ),
-            new THREE.MeshStandardMaterial({
-                color: data.color
-            })
-        );
-
-    body.position.y =
-        1.2;
-
-    body.castShadow = true;
-
-    group.add(body);
-
-
-    const head =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                0.42,
-                12,
-                12
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0xd49b7b
-            })
-        );
-
-    head.position.y =
-        2.35;
-
-    group.add(head);
-
-
-    return group;
-}
-
-
-function spawnEnemy(typeName = null) {
+function spawnEnemy(
+    typeName = null
+) {
 
     if (
         enemies.filter(
             e => e.alive
         ).length >= MAX_ENEMIES
     ) {
+
         return;
+
     }
 
 
     const type =
         typeName ||
         chooseEnemyType();
-
 
     const data =
         enemyTypes[type];
@@ -1274,7 +1649,8 @@ function spawnEnemy(typeName = null) {
                 levelMultiplier
             ),
 
-        speed: data.speed,
+        speed:
+            data.speed,
 
         damage:
             Math.floor(
@@ -1288,121 +1664,263 @@ function spawnEnemy(typeName = null) {
                 levelMultiplier
             ),
 
+        goldMin:
+            data.goldMin,
+
+        goldMax:
+            data.goldMax,
+
         alive: true,
 
         attackCooldown: 0,
 
-        respawnTimer:
-            RESPAWN_TIME,
+        respawnTimer: 0,
 
-        mesh: null
+        mesh:
+            createEnemyModel(type)
 
     };
-
-
-    enemy.mesh =
-        createEnemyMesh(
-            data
-        );
-
-
-    enemy.mesh.scale.set(
-        data.scale,
-        data.scale,
-        data.scale
-    );
 
 
     enemy.mesh.position.copy(
         enemy.position
     );
 
-
     scene.add(
         enemy.mesh
     );
 
-
     enemies.push(
         enemy
     );
+
+
+    if (
+        type === "elite"
+    ) {
+
+        showMessage(
+            "👑 ELITE-GEGNER!"
+        );
+
+    }
+
 }
 
 
-// Startgegner
 spawnEnemy("grunt");
 spawnEnemy("grunt");
 spawnEnemy("runner");
 spawnEnemy("tank");
 
 
-// =====================================================
-// SICHERHEITSZONE BURG
-// =====================================================
+// ============================================================
+// HÄNDLER
+// ============================================================
 
-function isInsideCastle() {
+const merchant =
+    new THREE.Group();
 
-    return (
-        player.position.x > -23 &&
-        player.position.x < 23 &&
-        player.position.z > -23 &&
-        player.position.z < 23
+const merchantBody =
+    box(
+        1.1,
+        1.6,
+        0.7,
+        new THREE.MeshStandardMaterial({
+            color: 0x6d4930
+        })
+    );
+
+merchantBody.position.y = 2.2;
+
+merchant.add(merchantBody);
+
+
+const merchantHead =
+    sphere(
+        0.55,
+        materials.skin
+    );
+
+merchantHead.position.y = 3.65;
+
+merchant.add(merchantHead);
+
+
+const merchantHat =
+    cylinder(
+        0.65,
+        0.75,
+        0.35,
+        materials.gold
+    );
+
+merchantHat.position.y = 4.15;
+
+merchant.add(merchantHat);
+
+
+const merchantArm1 =
+    cylinder(
+        0.18,
+        0.2,
+        1.4,
+        materials.leather
+    );
+
+merchantArm1.position.set(
+    -0.75,
+    2.2,
+    0
+);
+
+merchant.add(merchantArm1);
+
+
+const merchantArm2 =
+    cylinder(
+        0.18,
+        0.2,
+        1.4,
+        materials.leather
+    );
+
+merchantArm2.position.set(
+    0.75,
+    2.2,
+    0
+);
+
+merchant.add(merchantArm2);
+
+
+const merchantLeg1 =
+    box(
+        0.4,
+        1.4,
+        0.4,
+        materials.pants
+    );
+
+merchantLeg1.position.set(
+    -0.3,
+    0.65,
+    0
+);
+
+merchant.add(merchantLeg1);
+
+
+const merchantLeg2 =
+    box(
+        0.4,
+        1.4,
+        0.4,
+        materials.pants
+    );
+
+merchantLeg2.position.set(
+    0.3,
+    0.65,
+    0
+);
+
+merchant.add(merchantLeg2);
+
+
+merchant.position.set(
+    0,
+    0,
+    -5
+);
+
+scene.add(
+    merchant
+);
+
+
+// ============================================================
+// SHOP
+// ============================================================
+
+function openShop() {
+
+    if (
+        document.getElementById(
+            "shopMenu"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const menu =
+        document.createElement(
+            "div"
+        );
+
+    menu.id =
+        "shopMenu";
+
+
+    menu.style.position =
+        "fixed";
+
+    menu.style.left =
+        "50%";
+
+    menu.style.top =
+        "50%";
+
+    menu.style.transform =
+        "translate(-50%, -50%)";
+
+    menu.style.background =
+        "rgba(15,15,20,0.96)";
+
+    menu.style.color =
+        "white";
+
+    menu.style.padding =
+        "25px";
+
+    menu.style.border =
+        "2px solid #d6a72c";
+
+    menu.style.borderRadius =
+        "12px";
+
+    menu.style.minWidth =
+        "420px";
+
+    menu.style.maxHeight =
+        "80vh";
+
+    menu.style.overflow =
+        "auto";
+
+    menu.style.zIndex =
+        "100";
+
+
+    renderShop(
+        menu
+    );
+
+    document.body.appendChild(
+        menu
     );
 
 }
 
 
-// =====================================================
-// SHOP
-// =====================================================
+function renderShop(
+    menu
+) {
 
-let shopOpen = false;
-
-function openShop() {
-
-    if (shopOpen) {
-        return;
-    }
-
-    shopOpen = true;
-
-    const shop =
-        document.createElement("div");
-
-    shop.id =
-        "shop";
-
-    shop.style.position =
-        "fixed";
-
-    shop.style.left =
-        "50%";
-
-    shop.style.top =
-        "50%";
-
-    shop.style.transform =
-        "translate(-50%, -50%)";
-
-    shop.style.background =
-        "rgba(15,15,20,0.97)";
-
-    shop.style.padding =
-        "28px";
-
-    shop.style.border =
-        "3px solid #d6b45b";
-
-    shop.style.color =
-        "white";
-
-    shop.style.zIndex =
-        "100";
-
-    shop.style.minWidth =
-        "360px";
-
-    shop.innerHTML = `
+    let html = `
 
         <h2>🧑 Händler</h2>
 
@@ -1410,242 +1928,394 @@ function openShop() {
 
         <hr>
 
-        <button id="buyPotion">
-            Heiltrank – 20 Gold
-        </button>
+        <h3>⚔️ Waffen kaufen</h3>
 
-        <br><br>
+    `;
 
-        <button id="buySteel">
-            Stahlschwert – 120 Gold
-        </button>
 
-        <br><br>
+    for (
+        const name in weapons
+    ) {
 
-        <button id="buyKnight">
-            Ritterschwert – 300 Gold
-        </button>
+        const weapon =
+            weapons[name];
 
-        <br><br>
+        const owned =
+            !!inventory.weapons[name];
 
-        <button id="buyLeather">
-            Lederrüstung – 100 Gold
-        </button>
+        const equipped =
+            player.weapon === name;
 
-        <br><br>
 
-        <button id="buyIronArmor">
-            Eisenrüstung – 250 Gold
-        </button>
+        html += `
 
-        <br><br>
+            <div style="
+                padding:10px;
+                margin:6px 0;
+                border:1px solid #555;
+                border-radius:8px;
+            ">
 
-        <button id="closeShop">
+                <b>${name}</b><br>
+
+                Schaden: ${weapon.damage}<br>
+
+                Preis: ${
+                    weapon.price === 0
+                        ? "Startwaffe"
+                        : weapon.price + " Gold"
+                }<br>
+
+                ${
+                    equipped
+                        ? "✓ AUSGERÜSTET"
+                        : owned
+                            ? `<button
+                                onclick="equipWeapon('${name}')"
+                              >
+                                AUSGERÜSTEN
+                              </button>`
+                            : `<button
+                                onclick="buyWeapon('${name}')"
+                              >
+                                KAUFEN
+                              </button>`
+                }
+
+            </div>
+
+        `;
+
+    }
+
+
+    html += `
+
+        <h3>🛡️ Rüstung kaufen</h3>
+
+    `;
+
+
+    for (
+        const name in armors
+    ) {
+
+        const armor =
+            armors[name];
+
+        const owned =
+            !!inventory.armors[name];
+
+        const equipped =
+            player.armor === name;
+
+
+        html += `
+
+            <div style="
+                padding:10px;
+                margin:6px 0;
+                border:1px solid #555;
+                border-radius:8px;
+            ">
+
+                <b>${name}</b><br>
+
+                Schutz: ${armor.bonus}<br>
+
+                Preis: ${
+                    armor.price === 0
+                        ? "Startausrüstung"
+                        : armor.price + " Gold"
+                }<br>
+
+                ${
+                    equipped
+                        ? "✓ AUSGERÜSTET"
+                        : owned
+                            ? `<button
+                                onclick="equipArmor('${name}')"
+                              >
+                                AUSGERÜSTEN
+                              </button>`
+                            : `<button
+                                onclick="buyArmor('${name}')"
+                              >
+                                KAUFEN
+                              </button>`
+                }
+
+            </div>
+
+        `;
+
+    }
+
+
+    html += `
+
+        <hr>
+
+        <button
+            onclick="
+                document
+                .getElementById('shopMenu')
+                .remove()
+            "
+            style="
+                padding:10px 20px;
+                cursor:pointer;
+            "
+        >
             Schließen
         </button>
 
     `;
 
-    document.body.appendChild(
-        shop
-    );
 
-
-    document.getElementById(
-        "buyPotion"
-    ).onclick = () => {
-
-        if (
-            player.gold >= 20
-        ) {
-
-            player.gold -= 20;
-
-            inventory["Heiltrank"]++;
-
-            showMessage(
-                "🧪 Heiltrank gekauft!"
-            );
-
-            updateHUD();
-            saveGame(false);
-
-        }
-        else {
-
-            showMessage(
-                "Nicht genug Gold!"
-            );
-
-        }
-
-    };
-
-
-    document.getElementById(
-        "buySteel"
-    ).onclick = () => {
-
-        if (
-            player.gold >= 120
-        ) {
-
-            player.gold -= 120;
-
-            inventory["Stahlschwert"] = 1;
-
-            player.weapon =
-                "Stahlschwert";
-
-            player.weaponDamage =
-                40;
-
-            showMessage(
-                "⚔️ Stahlschwert gekauft!"
-            );
-
-            updateHUD();
-            saveGame(false);
-
-        }
-        else {
-
-            showMessage(
-                "Nicht genug Gold!"
-            );
-
-        }
-
-    };
-
-
-    document.getElementById(
-        "buyKnight"
-    ).onclick = () => {
-
-        if (
-            player.gold >= 300
-        ) {
-
-            player.gold -= 300;
-
-            inventory["Ritterschwert"] = 1;
-
-            player.weapon =
-                "Ritterschwert";
-
-            player.weaponDamage =
-                65;
-
-            showMessage(
-                "⚔️ Ritterschwert gekauft!"
-            );
-
-            updateHUD();
-            saveGame(false);
-
-        }
-        else {
-
-            showMessage(
-                "Nicht genug Gold!"
-            );
-
-        }
-
-    };
-
-
-    document.getElementById(
-        "buyLeather"
-    ).onclick = () => {
-
-        if (
-            player.gold >= 100
-        ) {
-
-            player.gold -= 100;
-
-            inventory["Lederrüstung"] = 1;
-
-            player.armor =
-                "Lederrüstung";
-
-            player.armorBonus =
-                4;
-
-            showMessage(
-                "🛡️ Lederrüstung gekauft!"
-            );
-
-            updateHUD();
-            saveGame(false);
-
-        }
-        else {
-
-            showMessage(
-                "Nicht genug Gold!"
-            );
-
-        }
-
-    };
-
-
-    document.getElementById(
-        "buyIronArmor"
-    ).onclick = () => {
-
-        if (
-            player.gold >= 250
-        ) {
-
-            player.gold -= 250;
-
-            inventory["Eisenrüstung"] = 1;
-
-            player.armor =
-                "Eisenrüstung";
-
-            player.armorBonus =
-                9;
-
-            showMessage(
-                "🛡️ Eisenrüstung gekauft!"
-            );
-
-            updateHUD();
-            saveGame(false);
-
-        }
-        else {
-
-            showMessage(
-                "Nicht genug Gold!"
-            );
-
-        }
-
-    };
-
-
-    document.getElementById(
-        "closeShop"
-    ).onclick = () => {
-
-        shop.remove();
-
-        shopOpen = false;
-
-    };
+    menu.innerHTML =
+        html;
 
 }
 
 
-// =====================================================
-// INTERAKTION
-// =====================================================
+// ============================================================
+// WAFFE KAUFEN
+// ============================================================
+
+window.buyWeapon =
+function(name) {
+
+    const weapon =
+        weapons[name];
+
+
+    if (
+        inventory.weapons[name]
+    ) {
+
+        showMessage(
+            "Diese Waffe besitzt du bereits."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        player.gold <
+        weapon.price
+    ) {
+
+        showMessage(
+            "Nicht genug Gold!"
+        );
+
+        return;
+
+    }
+
+
+    player.gold -=
+        weapon.price;
+
+
+    inventory.weapons[name] =
+        1;
+
+
+    showMessage(
+        `${name} gekauft!`
+    );
+
+
+    updateHUD();
+
+    saveGame(false);
+
+
+    const menu =
+        document.getElementById(
+            "shopMenu"
+        );
+
+    if (menu) {
+
+        renderShop(menu);
+
+    }
+
+};
+
+
+// ============================================================
+// WAFFE AUSRÜSTEN
+// ============================================================
+
+window.equipWeapon =
+function(name) {
+
+    if (
+        !inventory.weapons[name]
+    ) {
+
+        return;
+
+    }
+
+
+    player.weapon =
+        name;
+
+
+    player.weaponDamage =
+        weapons[name].damage;
+
+
+    updateSwordVisual();
+
+    updateHUD();
+
+    saveGame(false);
+
+
+    showMessage(
+        `${name} ausgerüstet`
+    );
+
+
+    const menu =
+        document.getElementById(
+            "shopMenu"
+        );
+
+    if (menu) {
+
+        renderShop(menu);
+
+    }
+
+};
+
+
+// ============================================================
+// RÜSTUNG KAUFEN
+// ============================================================
+
+window.buyArmor =
+function(name) {
+
+    const armor =
+        armors[name];
+
+
+    if (
+        inventory.armors[name]
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        player.gold <
+        armor.price
+    ) {
+
+        showMessage(
+            "Nicht genug Gold!"
+        );
+
+        return;
+
+    }
+
+
+    player.gold -=
+        armor.price;
+
+
+    inventory.armors[name] =
+        1;
+
+
+    showMessage(
+        `${name} gekauft!`
+    );
+
+
+    saveGame(false);
+
+    updateHUD();
+
+
+    const menu =
+        document.getElementById(
+            "shopMenu"
+        );
+
+    if (menu) {
+
+        renderShop(menu);
+
+    }
+
+};
+
+
+// ============================================================
+// RÜSTUNG AUSRÜSTEN
+// ============================================================
+
+window.equipArmor =
+function(name) {
+
+    if (
+        !inventory.armors[name]
+    ) {
+
+        return;
+
+    }
+
+
+    player.armor =
+        name;
+
+
+    player.armorBonus =
+        armors[name].bonus;
+
+
+    updateHUD();
+
+    saveGame(false);
+
+
+    showMessage(
+        `${name} ausgerüstet`
+    );
+
+
+    const menu =
+        document.getElementById(
+            "shopMenu"
+        );
+
+    if (menu) {
+
+        renderShop(menu);
+
+    }
+
+};
+
+
+// ============================================================
+// SHOP-NÄHE
+// ============================================================
 
 function checkMerchant() {
 
@@ -1654,191 +2324,218 @@ function checkMerchant() {
             merchant.position
         );
 
-    merchantLabel.style.display =
-        distance < 5 &&
-        isInsideCastle()
-            ? "block"
-            : "none";
-
-}
-
-
-window.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.code === "KeyE" &&
-            !shopOpen
-        ) {
-
-            const distance =
-                player.position.distanceTo(
-                    merchant.position
-                );
-
-            if (
-                distance < 5 &&
-                isInsideCastle()
-            ) {
-
-                openShop();
-
-                return;
-
-            }
-
-            attack();
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// XP
-// =====================================================
-
-function gainXP(amount) {
-
-    player.xp += amount;
-
-    while (
-        player.xp >=
-        player.xpToNextLevel
-    ) {
-
-        player.xp -=
-            player.xpToNextLevel;
-
-        player.level++;
-
-        player.xpToNextLevel =
-            Math.floor(
-                player.xpToNextLevel *
-                1.35
-            );
-
-        player.maxHealth += 20;
-
-        player.health =
-            player.maxHealth;
-
-        player.weaponDamage += 3;
-
-        showMessage(
-            `⭐ LEVEL UP! Level ${player.level}`
-        );
-
-    }
-
-}
-
-
-// =====================================================
-// LOOT
-// =====================================================
-
-function dropLoot(enemy) {
-
-    const gold =
-        Math.floor(
-            Math.random() * 16
-        ) + 5;
-
-    player.gold += gold;
-
-    showMessage(
-        `🪙 +${gold} Gold`
-    );
-
-}
-
-
-// =====================================================
-// GEGNER BESIEGT
-// =====================================================
-
-function killEnemy(enemy) {
 
     if (
-        !enemy.alive
+        distance < 4
     ) {
-        return;
+
+        showInteraction(
+            "E – Händler öffnen"
+        );
+
+        if (
+            keys["KeyE"]
+        ) {
+
+            keys["KeyE"] =
+                false;
+
+            openShop();
+
+        }
+
     }
-
-    enemy.alive = false;
-
-    enemy.respawnTimer =
-        RESPAWN_TIME;
-
-    gainXP(
-        enemy.xp
-    );
-
-    dropLoot(
-        enemy
-    );
-
-    scene.remove(
-        enemy.mesh
-    );
-
-    showMessage(
-        `${enemy.name} besiegt!`
-    );
 
 }
 
 
-// =====================================================
-// RESPAWN
-// =====================================================
+// ============================================================
+// INVENTAR
+// ============================================================
 
-function updateRespawns(delta) {
+function toggleInventory() {
+
+    const old =
+        document.getElementById(
+            "inventoryMenu"
+        );
+
+    if (old) {
+
+        old.remove();
+
+        return;
+
+    }
+
+
+    const menu =
+        document.createElement(
+            "div"
+        );
+
+    menu.id =
+        "inventoryMenu";
+
+
+    menu.style.position =
+        "fixed";
+
+    menu.style.left =
+        "50%";
+
+    menu.style.top =
+        "50%";
+
+    menu.style.transform =
+        "translate(-50%, -50%)";
+
+    menu.style.background =
+        "rgba(10,10,10,0.96)";
+
+    menu.style.color =
+        "white";
+
+    menu.style.padding =
+        "25px";
+
+    menu.style.border =
+        "2px solid white";
+
+    menu.style.borderRadius =
+        "12px";
+
+    menu.style.zIndex =
+        "100";
+
+    menu.style.minWidth =
+        "380px";
+
+
+    let html = `
+
+        <h2>🎒 Inventar</h2>
+
+        <p>⭐ Level ${player.level}</p>
+
+        <p>🪙 Gold ${player.gold}</p>
+
+        <p>❤️ ${player.health}/${player.maxHealth}</p>
+
+        <p>🧪 Heiltränke: ${inventory.potions}</p>
+
+        <hr>
+
+        <h3>⚔️ Waffen</h3>
+
+    `;
+
 
     for (
-        const enemy of enemies
+        const name in inventory.weapons
     ) {
 
-        if (
-            enemy.alive
-        ) {
-            continue;
-        }
+        html += `
 
-        enemy.respawnTimer -=
-            delta;
+            <p>
+                ${name}
+                –
+                Schaden ${weapons[name].damage}
 
-        if (
-            enemy.respawnTimer <= 0
-        ) {
+                ${
+                    player.weapon === name
+                        ? " ✓ AUSGERÜSTET"
+                        : `
+                            <button
+                                onclick="equipWeapon('${name}')"
+                            >
+                                Ausrüsten
+                            </button>
+                        `
+                }
 
-            spawnEnemy();
+            </p>
 
-            enemy.respawnTimer =
-                RESPAWN_TIME;
-
-            return;
-
-        }
+        `;
 
     }
+
+
+    html += `
+        <h3>🛡️ Rüstungen</h3>
+    `;
+
+
+    for (
+        const name in inventory.armors
+    ) {
+
+        html += `
+
+            <p>
+                ${name}
+                –
+                Schutz ${armors[name].bonus}
+
+                ${
+                    player.armor === name
+                        ? " ✓ AUSGERÜSTET"
+                        : `
+                            <button
+                                onclick="equipArmor('${name}')"
+                            >
+                                Ausrüsten
+                            </button>
+                        `
+                }
+
+            </p>
+
+        `;
+
+    }
+
+
+    html += `
+
+        <hr>
+
+        <button
+            onclick="
+                document
+                .getElementById('inventoryMenu')
+                .remove()
+            "
+        >
+            Schließen
+        </button>
+
+    `;
+
+
+    menu.innerHTML =
+        html;
+
+
+    document.body.appendChild(
+        menu
+    );
 
 }
 
 
-// =====================================================
+// ============================================================
 // KAMPF
-// =====================================================
+// ============================================================
 
 function attack() {
 
     if (
         player.attackCooldown > 0
     ) {
+
         return;
+
     }
 
 
@@ -1846,13 +2543,15 @@ function attack() {
         0.55;
 
 
-    sword.rotation.x =
-        -Math.PI / 2;
+    // Schwert schlägt nach vorne
+    sword.rotation.z =
+        -Math.PI * 0.8;
 
 
     setTimeout(() => {
 
-        sword.rotation.x = 0;
+        sword.rotation.z =
+            0;
 
     }, 180);
 
@@ -1875,7 +2574,8 @@ function attack() {
     );
 
 
-    let hit = false;
+    let hit =
+        false;
 
 
     for (
@@ -1885,7 +2585,9 @@ function attack() {
         if (
             !enemy.alive
         ) {
+
             continue;
+
         }
 
 
@@ -1897,6 +2599,10 @@ function attack() {
                 );
 
 
+        difference.y =
+            0;
+
+
         const distance =
             difference.length();
 
@@ -1904,25 +2610,31 @@ function attack() {
         if (
             distance > 4
         ) {
+
             continue;
+
         }
 
 
         difference.normalize();
 
 
-        if (
+        const dot =
             attackDirection.dot(
                 difference
-            ) > 0.25
+            );
+
+
+        if (
+            dot > 0.25
         ) {
+
+            hit = true;
 
             damageEnemy(
                 enemy,
                 player.weaponDamage
             );
-
-            hit = true;
 
         }
 
@@ -1931,44 +2643,17 @@ function attack() {
 }
 
 
-// =====================================================
-// ENEMY SCHADEN
-// =====================================================
+// ============================================================
+// GEGNER SCHADEN
+// ============================================================
 
 function damageEnemy(
     enemy,
     damage
 ) {
 
-    enemy.health -= damage;
-
-
-    // kurzer sichtbarer Treffer
-    enemy.mesh.scale.multiplyScalar(
-        1.08
-    );
-
-
-    setTimeout(() => {
-
-        if (
-            enemy.mesh
-        ) {
-
-            const scale =
-                enemyTypes[
-                    enemy.type
-                ].scale;
-
-            enemy.mesh.scale.set(
-                scale,
-                scale,
-                scale
-            );
-
-        }
-
-    }, 100);
+    enemy.health -=
+        damage;
 
 
     if (
@@ -1984,11 +2669,19 @@ function damageEnemy(
 }
 
 
-// =====================================================
+// ============================================================
 // GEGNER KI
-// =====================================================
+// ============================================================
 
-function updateEnemies(delta) {
+function updateEnemies(
+    delta
+) {
+
+    const inCastle =
+        isInsideCastle(
+            player.position
+        );
+
 
     for (
         const enemy of enemies
@@ -1997,15 +2690,19 @@ function updateEnemies(delta) {
         if (
             !enemy.alive
         ) {
+
             continue;
+
         }
 
 
-        // Burg ist sicher
+        // Gegner greifen im sicheren Burgbereich nicht an
         if (
-            isInsideCastle()
+            inCastle
         ) {
+
             continue;
+
         }
 
 
@@ -2017,25 +2714,32 @@ function updateEnemies(delta) {
                 );
 
 
+        direction.y =
+            0;
+
+
         const distance =
             direction.length();
 
 
         if (
-            distance > 2.3
+            distance > 2.4
         ) {
 
             direction.normalize();
+
 
             enemy.position.x +=
                 direction.x *
                 enemy.speed *
                 delta;
 
+
             enemy.position.z +=
                 direction.z *
                 enemy.speed *
                 delta;
+
 
             enemy.mesh.lookAt(
                 player.position.x,
@@ -2049,6 +2753,7 @@ function updateEnemies(delta) {
             enemy.attackCooldown -=
                 delta;
 
+
             if (
                 enemy.attackCooldown <= 0
             ) {
@@ -2056,6 +2761,7 @@ function updateEnemies(delta) {
                 damagePlayer(
                     enemy.damage
                 );
+
 
                 enemy.attackCooldown =
                     1.5;
@@ -2074,18 +2780,272 @@ function updateEnemies(delta) {
 }
 
 
-// =====================================================
+// ============================================================
+// GEGNER BESIEGT
+// ============================================================
+
+function killEnemy(
+    enemy
+) {
+
+    if (
+        !enemy.alive
+    ) {
+
+        return;
+
+    }
+
+
+    enemy.alive =
+        false;
+
+
+    enemy.respawnTimer =
+        RESPAWN_TIME;
+
+
+    gainXP(
+        enemy.xp
+    );
+
+
+    const gold =
+        Math.floor(
+            Math.random() *
+            (
+                enemy.goldMax -
+                enemy.goldMin +
+                1
+            )
+        ) +
+        enemy.goldMin;
+
+
+    player.gold +=
+        gold;
+
+
+    if (
+        Math.random() < 0.3
+    ) {
+
+        inventory.potions++;
+
+    }
+
+
+    scene.remove(
+        enemy.mesh
+    );
+
+
+    showMessage(
+        `${enemy.name} besiegt! +${gold} Gold`
+    );
+
+
+    saveGame(false);
+
+}
+
+
+// ============================================================
+// RESPAWN
+// ============================================================
+
+function updateRespawns(
+    delta
+) {
+
+    for (
+        const enemy of enemies
+    ) {
+
+        if (
+            enemy.alive
+        ) {
+
+            continue;
+
+        }
+
+
+        enemy.respawnTimer -=
+            delta;
+
+
+        if (
+            enemy.respawnTimer <= 0
+        ) {
+
+            const type =
+                chooseEnemyType();
+
+            const data =
+                enemyTypes[type];
+
+
+            const spawn =
+                spawnPoints[
+                    Math.floor(
+                        Math.random() *
+                        spawnPoints.length
+                    )
+                ];
+
+
+            const levelMultiplier =
+                1 +
+                (player.level - 1) *
+                0.08;
+
+
+            enemy.type =
+                type;
+
+            enemy.name =
+                data.name;
+
+            enemy.health =
+                Math.floor(
+                    data.health *
+                    levelMultiplier
+                );
+
+            enemy.maxHealth =
+                enemy.health;
+
+            enemy.speed =
+                data.speed;
+
+            enemy.damage =
+                Math.floor(
+                    data.damage *
+                    levelMultiplier
+                );
+
+            enemy.xp =
+                Math.floor(
+                    data.xp *
+                    levelMultiplier
+                );
+
+            enemy.goldMin =
+                data.goldMin;
+
+            enemy.goldMax =
+                data.goldMax;
+
+
+            enemy.position.set(
+                spawn[0],
+                0,
+                spawn[1]
+            );
+
+
+            enemy.mesh =
+                createEnemyModel(
+                    type
+                );
+
+
+            enemy.mesh.position.copy(
+                enemy.position
+            );
+
+
+            scene.add(
+                enemy.mesh
+            );
+
+
+            enemy.alive =
+                true;
+
+
+            enemy.attackCooldown =
+                0;
+
+        }
+
+    }
+
+}
+
+
+// ============================================================
+// XP
+// ============================================================
+
+function gainXP(
+    amount
+) {
+
+    player.xp +=
+        amount;
+
+
+    while (
+        player.xp >=
+        player.xpToNextLevel
+    ) {
+
+        player.xp -=
+            player.xpToNextLevel;
+
+        levelUp();
+
+    }
+
+}
+
+
+// ============================================================
+// LEVEL UP
+// ============================================================
+
+function levelUp() {
+
+    player.level++;
+
+    player.xpToNextLevel =
+        Math.floor(
+            player.xpToNextLevel *
+            1.35
+        );
+
+    player.maxHealth +=
+        20;
+
+    player.health =
+        player.maxHealth;
+
+
+    showMessage(
+        `⭐ LEVEL ${player.level}!`
+    );
+
+}
+
+
+// ============================================================
 // SPIELER SCHADEN
-// =====================================================
+// ============================================================
 
 function damagePlayer(
     damage
 ) {
 
     if (
-        isInsideCastle()
+        isInsideCastle(
+            player.position
+        )
     ) {
+
         return;
+
     }
 
 
@@ -2103,12 +3063,9 @@ function damagePlayer(
 
     player.health =
         Math.max(
-            0,
-            player.health
+            player.health,
+            0
         );
-
-
-    updateHUD();
 
 
     if (
@@ -2122,14 +3079,14 @@ function damagePlayer(
 }
 
 
-// =====================================================
+// ============================================================
 // HEILTRANK
-// =====================================================
+// ============================================================
 
 function usePotion() {
 
     if (
-        inventory["Heiltrank"] <= 0
+        inventory.potions <= 0
     ) {
 
         showMessage(
@@ -2146,16 +3103,13 @@ function usePotion() {
         player.maxHealth
     ) {
 
-        showMessage(
-            "Du bist bereits voll geheilt!"
-        );
-
         return;
 
     }
 
 
-    inventory["Heiltrank"]--;
+    inventory.potions--;
+
 
     player.health =
         Math.min(
@@ -2163,569 +3117,391 @@ function usePotion() {
             player.health + 40
         );
 
-    updateHUD();
+
+    showMessage(
+        "+40 HP"
+    );
+
 
     saveGame(false);
 
 }
 
 
-// =====================================================
-// INVENTAR
-// =====================================================
+// ============================================================
+// BURG-BEREICH
+// ============================================================
 
-function toggleInventory() {
+function isInsideCastle(
+    position
+) {
 
-    let menu =
-        document.getElementById(
-            "inventoryMenu"
-        );
-
-
-    if (
-        menu
-    ) {
-
-        menu.remove();
-
-        return;
-
-    }
-
-
-    menu =
-        document.createElement(
-            "div"
-        );
-
-
-    menu.id =
-        "inventoryMenu";
-
-
-    menu.style.position =
-        "fixed";
-
-    menu.style.left =
-        "50%";
-
-    menu.style.top =
-        "50%";
-
-    menu.style.transform =
-        "translate(-50%, -50%)";
-
-    menu.style.background =
-        "rgba(10,10,10,0.95)";
-
-    menu.style.padding =
-        "30px";
-
-    menu.style.border =
-        "2px solid white";
-
-    menu.style.color =
-        "white";
-
-    menu.style.zIndex =
-        "100";
-
-
-    menu.innerHTML = `
-
-        <h2>🎒 Inventar</h2>
-
-        <p>⭐ Level: ${player.level}</p>
-
-        <p>XP: ${player.xp}/${player.xpToNextLevel}</p>
-
-        <p>🪙 Gold: ${player.gold}</p>
-
-        <p>⚔️ Waffe: ${player.weapon}</p>
-
-        <p>⚔️ Schaden: ${player.weaponDamage}</p>
-
-        <p>🛡️ Rüstung: ${player.armor}</p>
-
-        <hr>
-
-        <p>🧪 Heiltränke:
-            ${inventory["Heiltrank"]}
-        </p>
-
-        <button id="closeInventory">
-            Schließen
-        </button>
-
-    `;
-
-
-    document.body.appendChild(
-        menu
+    return (
+        position.x > -15 &&
+        position.x < 15 &&
+        position.z > -17 &&
+        position.z < 11
     );
-
-
-    document.getElementById(
-        "closeInventory"
-    ).onclick = () => {
-
-        menu.remove();
-
-    };
 
 }
 
 
-// =====================================================
-// SPEICHERN
-// =====================================================
+// ============================================================
+// KOLLISION
+// ============================================================
 
-function saveGame(
-    show = true
+function collidesWithCastle(
+    position
 ) {
 
-    const saveData = {
+    const radius =
+        0.7;
 
-        player: {
 
-            health:
-                player.health,
+    // Hintere Wand
+    if (
+        position.z < -17 &&
+        Math.abs(position.x) < 15
+    ) {
 
-            maxHealth:
-                player.maxHealth,
+        return true;
 
-            level:
-                player.level,
+    }
 
-            xp:
-                player.xp,
 
-            xpToNextLevel:
-                player.xpToNextLevel,
+    // Linke Wand
+    if (
+        position.x < -15 &&
+        position.z > -17 &&
+        position.z < 11
+    ) {
 
-            gold:
-                player.gold,
+        return true;
 
-            weapon:
-                player.weapon,
+    }
 
-            weaponDamage:
-                player.weaponDamage,
 
-            armor:
-                player.armor,
+    // Rechte Wand
+    if (
+        position.x > 15 &&
+        position.z > -17 &&
+        position.z < 11
+    ) {
 
-            armorBonus:
-                player.armorBonus,
+        return true;
 
-            x:
-                player.position.x,
+    }
 
-            y:
-                player.position.y,
 
-            z:
-                player.position.z
+    // Vorderwand links
+    if (
+        position.z > 11 &&
+        position.z < 13 &&
+        position.x > -15 &&
+        position.x < -5
+    ) {
 
-        },
+        return true;
 
-        inventory: {
-            ...inventory
+    }
+
+
+    // Vorderwand rechts
+    if (
+        position.z > 11 &&
+        position.z < 13 &&
+        position.x > 5 &&
+        position.x < 15
+    ) {
+
+        return true;
+
+    }
+
+
+    return false;
+
+}
+
+
+// ============================================================
+// SPIELERBEWEGUNG
+// ============================================================
+
+const keys = {};
+
+function updatePlayer(
+    delta
+) {
+
+    const direction =
+        new THREE.Vector3();
+
+
+    if (
+        keys["KeyW"]
+    ) {
+
+        direction.z -= 1;
+
+    }
+
+
+    if (
+        keys["KeyS"]
+    ) {
+
+        direction.z += 1;
+
+    }
+
+
+    if (
+        keys["KeyA"]
+    ) {
+
+        direction.x -= 1;
+
+    }
+
+
+    if (
+        keys["KeyD"]
+    ) {
+
+        direction.x += 1;
+
+    }
+
+
+    if (
+        direction.length() > 0
+    ) {
+
+        direction.normalize();
+
+
+        direction.applyAxisAngle(
+            new THREE.Vector3(
+                0,
+                1,
+                0
+            ),
+            cameraYaw
+        );
+
+
+        const speed =
+            keys["ShiftLeft"] ||
+            keys["ShiftRight"]
+                ? player.runningSpeed
+                : player.speed;
+
+
+        const nextPosition =
+            player.position
+                .clone()
+                .add(
+                    direction
+                        .clone()
+                        .multiplyScalar(
+                            speed * delta
+                        )
+                );
+
+
+        if (
+            !collidesWithCastle(
+                nextPosition
+            )
+        ) {
+
+            player.position.copy(
+                nextPosition
+            );
+
         }
 
-    };
+
+        playerMesh.rotation.y =
+            cameraYaw;
 
 
-    localStorage.setItem(
-        "kingdomsBeyondSave",
-        JSON.stringify(
-            saveData
+        // einfache Laufbewegung
+        const walk =
+            Math.sin(
+                performance.now() *
+                0.012
+            ) * 0.3;
+
+
+        leftLeg.rotation.x =
+            walk;
+
+        rightLeg.rotation.x =
+            -walk;
+
+        leftArm.rotation.x =
+            -walk;
+
+        rightArm.rotation.x =
+            walk;
+
+    }
+
+
+    player.velocityY -=
+        25 * delta;
+
+
+    player.position.y +=
+        player.velocityY *
+        delta;
+
+
+    if (
+        player.position.y <= 0
+    ) {
+
+        player.position.y =
+            0;
+
+        player.velocityY =
+            0;
+
+        player.onGround =
+            true;
+
+    }
+
+
+    playerMesh.position.copy(
+        player.position
+    );
+
+}
+
+
+// ============================================================
+// KAMERA
+// ============================================================
+
+let cameraYaw = 0;
+
+let cameraPitch = -0.25;
+
+
+function updateCamera() {
+
+    const target =
+        player.position.clone();
+
+
+    target.y +=
+        2;
+
+
+    const offset =
+        new THREE.Vector3(
+            0,
+            2.5,
+            8
+        );
+
+
+    offset.applyEuler(
+        new THREE.Euler(
+            cameraPitch,
+            cameraYaw,
+            0,
+            "YXZ"
         )
     );
 
 
-    if (
-        show
-    ) {
+    camera.position.copy(
+        target
+            .clone()
+            .add(
+                offset
+            )
+    );
 
-        showMessage(
-            "💾 Spiel gespeichert"
-        );
 
-    }
+    camera.lookAt(
+        target
+    );
 
 }
 
 
-// =====================================================
-// LADEN
-// =====================================================
-
-function loadGame() {
-
-    const raw =
-        localStorage.getItem(
-            "kingdomsBeyondSave"
-        );
-
-
-    if (
-        !raw
-    ) {
-        return;
-    }
-
-
-    try {
-
-        const data =
-            JSON.parse(
-                raw
-            );
-
-
-        if (
-            data.player
-        ) {
-
-            Object.assign(
-                player,
-                data.player
-            );
-
-            player.position.set(
-                data.player.x ?? 0,
-                data.player.y ?? 1,
-                data.player.z ?? 15
-            );
-
-        }
-
-
-        if (
-            data.inventory
-        ) {
-
-            Object.assign(
-                inventory,
-                data.inventory
-            );
-
-        }
-
-
-        playerMesh.position.copy(
-            player.position
-        );
-
-
-        updateHUD();
-
-    }
-    catch (error) {
-
-        console.error(
-            "Save konnte nicht geladen werden:",
-            error
-        );
-
-    }
-
-}
-
-
-// =====================================================
-// HUD
-// =====================================================
-
-const hud =
-    document.createElement(
-        "div"
-    );
-
-
-hud.style.position =
-    "fixed";
-
-hud.style.top =
-    "20px";
-
-hud.style.right =
-    "20px";
-
-hud.style.padding =
-    "15px";
-
-hud.style.background =
-    "rgba(0,0,0,0.55)";
-
-hud.style.color =
-    "white";
-
-hud.style.fontFamily =
-    "Arial";
-
-hud.style.zIndex =
-    "20";
-
-hud.style.lineHeight =
-    "1.6";
-
-
-document.body.appendChild(
-    hud
-);
-
-
-// Health
-const healthContainer =
-    document.createElement(
-        "div"
-    );
-
-
-healthContainer.style.position =
-    "fixed";
-
-healthContainer.style.bottom =
-    "25px";
-
-healthContainer.style.left =
-    "25px";
-
-healthContainer.style.width =
-    "250px";
-
-healthContainer.style.height =
-    "25px";
-
-healthContainer.style.border =
-    "2px solid white";
-
-healthContainer.style.background =
-    "rgba(0,0,0,0.5)";
-
-healthContainer.style.zIndex =
-    "20";
-
-
-const healthBar =
-    document.createElement(
-        "div"
-    );
-
-
-healthBar.style.width =
-    "100%";
-
-healthBar.style.height =
-    "100%";
-
-healthBar.style.background =
-    "#d62828";
-
-
-healthContainer.appendChild(
-    healthBar
-);
-
-document.body.appendChild(
-    healthContainer
-);
-
-
-function updateHUD() {
-
-    hud.innerHTML = `
-
-        ❤️ ${player.health}/${player.maxHealth}<br>
-
-        ⭐ Level ${player.level}<br>
-
-        XP:
-        ${player.xp}/${player.xpToNextLevel}<br>
-
-        🪙 ${player.gold} Gold<br>
-
-        ⚔️ ${player.weapon}
-        (${player.weaponDamage})<br>
-
-        🛡️ ${player.armor}<br>
-
-        🧪 ${inventory["Heiltrank"]}
-        Heiltrank<br>
-
-        👾 Gegner:
-        ${
-            enemies.filter(
-                e => e.alive
-            ).length
-        }/${MAX_ENEMIES}
-
-    `;
-
-
-    healthBar.style.width =
-        (
-            player.health /
-            player.maxHealth *
-            100
-        ) + "%";
-
-}
-
-
-// =====================================================
-// NACHRICHTEN
-// =====================================================
-
-function showMessage(
+// ============================================================
+// INTERAKTION
+// ============================================================
+
+function showInteraction(
     text
 ) {
 
-    const message =
-        document.createElement(
-            "div"
+    let element =
+        document.getElementById(
+            "interaction"
         );
 
 
-    message.textContent =
+    if (!element) {
+
+        element =
+            document.createElement(
+                "div"
+            );
+
+        element.id =
+            "interaction";
+
+        element.style.position =
+            "fixed";
+
+        element.style.bottom =
+            "110px";
+
+        element.style.left =
+            "50%";
+
+        element.style.transform =
+            "translateX(-50%)";
+
+        element.style.color =
+            "white";
+
+        element.style.fontSize =
+            "20px";
+
+        element.style.fontWeight =
+            "bold";
+
+        element.style.textShadow =
+            "2px 2px 4px black";
+
+        element.style.zIndex =
+            "30";
+
+        document.body.appendChild(
+            element
+        );
+
+    }
+
+
+    element.textContent =
         text;
 
-
-    message.style.position =
-        "fixed";
-
-    message.style.left =
-        "50%";
-
-    message.style.top =
-        "40%";
-
-    message.style.transform =
-        "translate(-50%, -50%)";
-
-    message.style.color =
-        "white";
-
-    message.style.fontSize =
-        "26px";
-
-    message.style.fontWeight =
-        "bold";
-
-    message.style.textShadow =
-        "2px 2px 5px black";
-
-    message.style.zIndex =
-        "150";
-
-
-    document.body.appendChild(
-        message
-    );
-
-
-    setTimeout(() => {
-
-        message.remove();
-
-    }, 900);
-
 }
 
 
-// =====================================================
-// GAME OVER
-// =====================================================
-
-function gameOver() {
-
-    document.exitPointerLock();
-
-
-    const screen =
-        document.createElement(
-            "div"
-        );
-
-
-    screen.style.position =
-        "fixed";
-
-    screen.style.inset =
-        "0";
-
-    screen.style.background =
-        "rgba(0,0,0,0.85)";
-
-    screen.style.display =
-        "flex";
-
-    screen.style.flexDirection =
-        "column";
-
-    screen.style.alignItems =
-        "center";
-
-    screen.style.justifyContent =
-        "center";
-
-    screen.style.color =
-        "white";
-
-    screen.style.fontSize =
-        "40px";
-
-    screen.style.zIndex =
-        "200";
-
-
-    screen.innerHTML = `
-
-        <div>DU BIST GEFALLEN</div>
-
-        <button
-            id="restart"
-            style="
-                margin-top:25px;
-                padding:12px 25px;
-                font-size:20px;
-                cursor:pointer;
-            "
-        >
-            Erneut versuchen
-        </button>
-
-    `;
-
-
-    document.body.appendChild(
-        screen
-    );
-
-
-    document.getElementById(
-        "restart"
-    ).onclick = () => {
-
-        localStorage.removeItem(
-            "kingdomsBeyondSave"
-        );
-
-        location.reload();
-
-    };
-
-}
-
-
-// =====================================================
+// ============================================================
 // TASTATUR
-// =====================================================
-
-const keys = {};
-
+// ============================================================
 
 window.addEventListener(
     "keydown",
@@ -2745,6 +3521,15 @@ window.addEventListener(
 
             player.onGround =
                 false;
+
+        }
+
+
+        if (
+            event.code === "KeyE"
+        ) {
+
+            attack();
 
         }
 
@@ -2801,14 +3586,9 @@ window.addEventListener(
 );
 
 
-// =====================================================
+// ============================================================
 // MAUS
-// =====================================================
-
-let cameraYaw = 0;
-
-let cameraPitch = -0.25;
-
+// ============================================================
 
 document.addEventListener(
     "click",
@@ -2816,13 +3596,19 @@ document.addEventListener(
 
         if (
             event.target.closest(
-                "#inventoryMenu"
-            ) ||
+                "#shopMenu"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        if (
             event.target.closest(
-                "#shop"
-            ) ||
-            event.target.id ===
-                "restart"
+                "#inventoryMenu"
+            )
         ) {
 
             return;
@@ -2871,285 +3657,488 @@ document.addEventListener(
 );
 
 
-// =====================================================
-// KOLLISION
-// =====================================================
+// ============================================================
+// HUD
+// ============================================================
 
-function canMoveTo(
-    x,
-    z
-) {
+const hud =
+    document.createElement(
+        "div"
+    );
 
-    const radius = 0.65;
+hud.style.position =
+    "fixed";
 
+hud.style.top =
+    "20px";
 
-    for (
-        const collider of worldColliders
-    ) {
+hud.style.right =
+    "20px";
 
-        const pos =
-            collider.mesh.position;
+hud.style.padding =
+    "15px";
 
+hud.style.background =
+    "rgba(0,0,0,0.55)";
 
-        const halfW =
-            collider.width / 2 +
-            radius;
+hud.style.color =
+    "white";
 
-        const halfD =
-            collider.depth / 2 +
-            radius;
+hud.style.fontFamily =
+    "Arial";
 
+hud.style.zIndex =
+    "20";
 
-        if (
-            x >
-                pos.x - halfW &&
-            x <
-                pos.x + halfW &&
-            z >
-                pos.z - halfD &&
-            z <
-                pos.z + halfD
-        ) {
+hud.style.lineHeight =
+    "1.6";
 
-            return false;
-
-        }
-
-    }
+document.body.appendChild(
+    hud
+);
 
 
-    return true;
+const healthContainer =
+    document.createElement(
+        "div"
+    );
+
+healthContainer.style.position =
+    "fixed";
+
+healthContainer.style.bottom =
+    "25px";
+
+healthContainer.style.left =
+    "25px";
+
+healthContainer.style.width =
+    "250px";
+
+healthContainer.style.height =
+    "25px";
+
+healthContainer.style.border =
+    "2px solid white";
+
+healthContainer.style.background =
+    "rgba(0,0,0,0.5)";
+
+healthContainer.style.zIndex =
+    "20";
+
+
+const healthBar =
+    document.createElement(
+        "div"
+    );
+
+healthBar.style.width =
+    "100%";
+
+healthBar.style.height =
+    "100%";
+
+healthBar.style.background =
+    "#d62828";
+
+healthContainer.appendChild(
+    healthBar
+);
+
+document.body.appendChild(
+    healthContainer
+);
+
+
+function updateHUD() {
+
+    hud.innerHTML = `
+
+        ❤️ ${player.health}/${player.maxHealth}<br>
+
+        ⭐ Level ${player.level}<br>
+
+        XP: ${player.xp}/${player.xpToNextLevel}<br>
+
+        🪙 ${player.gold} Gold<br>
+
+        ⚔️ ${player.weapon}
+        (${player.weaponDamage} Schaden)<br>
+
+        🛡️ ${player.armor}
+        (+${player.armorBonus})<br>
+
+        🧪 ${inventory.potions} Heiltränke<br>
+
+        🎒 ${Object.keys(inventory.weapons).length} Waffen
+
+    `;
+
+
+    healthBar.style.width =
+        (
+            player.health /
+            player.maxHealth *
+            100
+        ) + "%";
 
 }
 
 
-// =====================================================
-// SPIELER BEWEGUNG
-// =====================================================
+// ============================================================
+// NACHRICHTEN
+// ============================================================
 
-function updatePlayer(
-    delta
+function showMessage(
+    text
 ) {
 
-    const direction =
-        new THREE.Vector3();
-
-
-    if (
-        keys["KeyW"]
-    ) {
-        direction.z -= 1;
-    }
-
-
-    if (
-        keys["KeyS"]
-    ) {
-        direction.z += 1;
-    }
-
-
-    if (
-        keys["KeyA"]
-    ) {
-        direction.x -= 1;
-    }
-
-
-    if (
-        keys["KeyD"]
-    ) {
-        direction.x += 1;
-    }
-
-
-    if (
-        direction.length() > 0
-    ) {
-
-        direction.normalize();
-
-
-        direction.applyAxisAngle(
-            new THREE.Vector3(
-                0,
-                1,
-                0
-            ),
-            cameraYaw
+    const message =
+        document.createElement(
+            "div"
         );
 
 
-        const speed =
-            keys["ShiftLeft"] ||
-            keys["ShiftRight"]
-                ? player.runningSpeed
-                : player.speed;
+    message.textContent =
+        text;
 
 
-        const newX =
-            player.position.x +
-            direction.x *
-            speed *
-            delta;
+    message.style.position =
+        "fixed";
+
+    message.style.left =
+        "50%";
+
+    message.style.top =
+        "35%";
+
+    message.style.transform =
+        "translate(-50%, -50%)";
+
+    message.style.color =
+        "white";
+
+    message.style.fontSize =
+        "26px";
+
+    message.style.fontWeight =
+        "bold";
+
+    message.style.textShadow =
+        "2px 2px 5px black";
+
+    message.style.zIndex =
+        "200";
 
 
-        const newZ =
-            player.position.z +
-            direction.z *
-            speed *
-            delta;
-
-
-        if (
-            canMoveTo(
-                newX,
-                player.position.z
-            )
-        ) {
-
-            player.position.x =
-                newX;
-
-        }
-
-
-        if (
-            canMoveTo(
-                player.position.x,
-                newZ
-            )
-        ) {
-
-            player.position.z =
-                newZ;
-
-        }
-
-    }
-
-
-    player.velocityY -=
-        25 *
-        delta;
-
-
-    player.position.y +=
-        player.velocityY *
-        delta;
-
-
-    if (
-        player.position.y <= 1
-    ) {
-
-        player.position.y =
-            1;
-
-        player.velocityY =
-            0;
-
-        player.onGround =
-            true;
-
-    }
-
-
-    playerMesh.position.copy(
-        player.position
+    document.body.appendChild(
+        message
     );
 
 
-    // Spieler dreht sich in Laufrichtung
-    if (
-        direction.length() > 0
-    ) {
-
-        playerMesh.rotation.y =
-            Math.atan2(
-                direction.x,
-                direction.z
-            );
-
-    }
+    setTimeout(
+        () => message.remove(),
+        900
+    );
 
 }
 
 
-// =====================================================
-// KAMERA
-// =====================================================
+// ============================================================
+// SPEICHERN
+// ============================================================
 
-function updateCamera() {
+function saveGame(
+    show = true
+) {
 
-    const target =
-        player.position.clone();
+    const saveData = {
+
+        player: {
+
+            health:
+                player.health,
+
+            maxHealth:
+                player.maxHealth,
+
+            level:
+                player.level,
+
+            xp:
+                player.xp,
+
+            xpToNextLevel:
+                player.xpToNextLevel,
+
+            gold:
+                player.gold,
+
+            weapon:
+                player.weapon,
+
+            weaponDamage:
+                player.weaponDamage,
+
+            armor:
+                player.armor,
+
+            armorBonus:
+                player.armorBonus,
+
+            x:
+                player.position.x,
+
+            y:
+                player.position.y,
+
+            z:
+                player.position.z
+
+        },
+
+        inventory: {
+
+            potions:
+                inventory.potions,
+
+            weapons:
+                inventory.weapons,
+
+            armors:
+                inventory.armors
+
+        }
+
+    };
 
 
-    target.y += 1;
-
-
-    const offset =
-        new THREE.Vector3(
-            0,
-            2,
-            8
-        );
-
-
-    offset.applyEuler(
-        new THREE.Euler(
-            cameraPitch,
-            cameraYaw,
-            0,
-            "YXZ"
+    localStorage.setItem(
+        "kingdomsBeyondSave",
+        JSON.stringify(
+            saveData
         )
     );
 
 
-    camera.position.copy(
-        target
-            .clone()
-            .add(
-                offset
-            )
-    );
+    if (show) {
 
+        showMessage(
+            "💾 Spiel gespeichert"
+        );
 
-    camera.lookAt(
-        target
-    );
+    }
 
 }
 
 
-// =====================================================
-// AUSGANGS-HINWEIS
-// =====================================================
+// ============================================================
+// LADEN
+// ============================================================
 
-function updateExitHint() {
+function loadGame() {
 
-    const nearGate =
-        Math.abs(
-            player.position.z - 25
-        ) < 7 &&
-        Math.abs(
-            player.position.x
-        ) < 7;
+    const raw =
+        localStorage.getItem(
+            "kingdomsBeyondSave"
+        );
 
 
-    exitText.style.display =
-        isInsideCastle() &&
-        nearGate
-            ? "block"
-            : "none";
+    if (!raw) {
+
+        updateSwordVisual();
+
+        return;
+
+    }
+
+
+    try {
+
+        const data =
+            JSON.parse(raw);
+
+
+        if (
+            data.player
+        ) {
+
+            Object.assign(
+                player,
+                data.player
+            );
+
+        }
+
+
+        if (
+            data.inventory
+        ) {
+
+            if (
+                data.inventory.potions !==
+                undefined
+            ) {
+
+                inventory.potions =
+                    data.inventory.potions;
+
+            }
+
+
+            if (
+                data.inventory.weapons
+            ) {
+
+                inventory.weapons =
+                    data.inventory.weapons;
+
+            }
+
+
+            if (
+                data.inventory.armors
+            ) {
+
+                inventory.armors =
+                    data.inventory.armors;
+
+            }
+
+        }
+
+
+        player.position.set(
+            player.position.x,
+            player.position.y,
+            player.position.z
+        );
+
+
+        updateSwordVisual();
+
+        updateHUD();
+
+
+    }
+    catch (error) {
+
+        console.error(
+            "Save konnte nicht geladen werden:",
+            error
+        );
+
+    }
 
 }
 
 
-// =====================================================
+// ============================================================
+// GAME OVER
+// ============================================================
+
+function gameOver() {
+
+    if (
+        document.getElementById(
+            "gameOver"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    document.exitPointerLock();
+
+
+    const screen =
+        document.createElement(
+            "div"
+        );
+
+
+    screen.id =
+        "gameOver";
+
+
+    screen.style.position =
+        "fixed";
+
+    screen.style.inset =
+        "0";
+
+    screen.style.background =
+        "rgba(0,0,0,0.85)";
+
+    screen.style.display =
+        "flex";
+
+    screen.style.flexDirection =
+        "column";
+
+    screen.style.alignItems =
+        "center";
+
+    screen.style.justifyContent =
+        "center";
+
+    screen.style.color =
+        "white";
+
+    screen.style.fontSize =
+        "40px";
+
+    screen.style.zIndex =
+        "300";
+
+
+    screen.innerHTML = `
+
+        <div>DU BIST GEFALLEN</div>
+
+        <button
+            id="restart"
+            style="
+                margin-top:25px;
+                padding:12px 25px;
+                font-size:20px;
+                cursor:pointer;
+            "
+        >
+            Erneut versuchen
+        </button>
+
+    `;
+
+
+    document.body.appendChild(
+        screen
+    );
+
+
+    document
+        .getElementById(
+            "restart"
+        )
+        .onclick = () => {
+
+            localStorage.removeItem(
+                "kingdomsBeyondSave"
+            );
+
+            location.reload();
+
+        };
+
+}
+
+
+// ============================================================
 // RESIZE
-// =====================================================
+// ============================================================
 
 window.addEventListener(
     "resize",
@@ -3170,9 +4159,9 @@ window.addEventListener(
 );
 
 
-// =====================================================
+// ============================================================
 // GAME LOOP
-// =====================================================
+// ============================================================
 
 const clock =
     new THREE.Clock();
@@ -3217,11 +4206,11 @@ function gameLoop() {
     );
 
 
-    updateCamera();
-
     checkMerchant();
 
-    updateExitHint();
+
+    updateCamera();
+
 
     updateHUD();
 
@@ -3234,9 +4223,9 @@ function gameLoop() {
 }
 
 
-// =====================================================
+// ============================================================
 // START
-// =====================================================
+// ============================================================
 
 loadGame();
 
