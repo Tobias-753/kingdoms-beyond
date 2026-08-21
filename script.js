@@ -1,18 +1,24 @@
 import * as THREE from "three";
 
 // ============================================================
-// KINGDOMS BEYOND 0.7
-// ============================================================
-// - Detailliertere humanoide Charaktere
-// - Unterschiedliche Gegnerkörper
-// - Burg mit Innenhof
-// - Händler + Shop
-// - Waffen kaufen UND alte Waffen behalten
-// - Waffen aus Inventar ausrüsten
-// - Rüstungen kaufen und wechseln
-// - Burgtor / Ausgang
-// - Sicherheitsbereich Burg
-// - Kollisionen mit Wänden und Objekten
+// KINGDOMS BEYOND 0.8
+// Charakter-Update
+//
+// - Detaillierter Held
+// - Unterschiedliche humanoide Gegner
+// - sichtbare Rüstung
+// - sichtbare Waffen
+// - Laufanimation
+// - Angriffsanimation
+// - Gegner-Animation
+// - Elite-Gegner
+// - Burg + Händler + Shop
+// - Waffeninventar
+// - Alte Waffen bleiben erhalten
+// - Waffen ausrüsten
+// - Rüstung ausrüsten
+// - Kollisionen
+// - sicherer Burgbereich
 // - Speichern / Laden
 // ============================================================
 
@@ -27,8 +33,8 @@ scene.background = new THREE.Color(0x87ceeb);
 
 scene.fog = new THREE.Fog(
     0x87ceeb,
-    55,
-    190
+    60,
+    200
 );
 
 
@@ -62,6 +68,8 @@ renderer.setPixelRatio(
 );
 
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
 
 document.body.appendChild(
     renderer.domElement
@@ -75,127 +83,155 @@ document.body.appendChild(
 scene.add(
     new THREE.HemisphereLight(
         0xffffff,
-        0x405040,
+        0x385238,
         2.2
     )
 );
 
-const sun = new THREE.DirectionalLight(
-    0xffffff,
-    2.5
-);
+const sun =
+    new THREE.DirectionalLight(
+        0xffffff,
+        2.5
+    );
 
 sun.position.set(
-    50,
+    40,
     90,
     30
 );
 
 sun.castShadow = true;
 
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
+
 scene.add(sun);
-
-
-// ============================================================
-// BODEN
-// ============================================================
-
-const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(
-        320,
-        320
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0x416b37
-    })
-);
-
-ground.rotation.x = -Math.PI / 2;
-
-ground.receiveShadow = true;
-
-scene.add(ground);
 
 
 // ============================================================
 // MATERIALIEN
 // ============================================================
 
-const materials = {
+const MAT = {
 
     skin:
         new THREE.MeshStandardMaterial({
-            color: 0xc98f72
+            color: 0xc8896b,
+            roughness: 0.8
         }),
 
     skinDark:
         new THREE.MeshStandardMaterial({
-            color: 0x8e5c47
+            color: 0x76503f,
+            roughness: 0.9
+        }),
+
+    skinGreen:
+        new THREE.MeshStandardMaterial({
+            color: 0x638b43,
+            roughness: 0.9
         }),
 
     hair:
         new THREE.MeshStandardMaterial({
-            color: 0x3a2418
+            color: 0x24160f
         }),
 
-    shirt:
+    hairBlond:
         new THREE.MeshStandardMaterial({
-            color: 0x315d8c
+            color: 0xb89542
         }),
 
-    shirtDark:
+    clothBlue:
         new THREE.MeshStandardMaterial({
-            color: 0x233c5c
+            color: 0x315f92
         }),
 
-    pants:
+    clothRed:
         new THREE.MeshStandardMaterial({
-            color: 0x292d35
+            color: 0x7e2929
         }),
 
-    boots:
+    clothGreen:
         new THREE.MeshStandardMaterial({
-            color: 0x241811
+            color: 0x3e6536
         }),
 
-    metal:
+    clothBrown:
         new THREE.MeshStandardMaterial({
-            color: 0x9da5ad,
-            metalness: 0.75,
-            roughness: 0.25
+            color: 0x68452e
         }),
 
-    darkMetal:
+    clothPurple:
         new THREE.MeshStandardMaterial({
-            color: 0x343b45,
-            metalness: 0.8,
-            roughness: 0.3
-        }),
-
-    gold:
-        new THREE.MeshStandardMaterial({
-            color: 0xd6a72c,
-            metalness: 0.75
-        }),
-
-    red:
-        new THREE.MeshStandardMaterial({
-            color: 0x8d2424
+            color: 0x603b7d
         }),
 
     leather:
         new THREE.MeshStandardMaterial({
-            color: 0x65402b
+            color: 0x51321f,
+            roughness: 0.85
         }),
 
-    white:
+    boot:
         new THREE.MeshStandardMaterial({
-            color: 0xe8e8e8
+            color: 0x1b130e,
+            roughness: 0.8
+        }),
+
+    iron:
+        new THREE.MeshStandardMaterial({
+            color: 0x737d87,
+            metalness: 0.8,
+            roughness: 0.28
+        }),
+
+    steel:
+        new THREE.MeshStandardMaterial({
+            color: 0xb8c2ca,
+            metalness: 0.9,
+            roughness: 0.18
+        }),
+
+    darkSteel:
+        new THREE.MeshStandardMaterial({
+            color: 0x343c46,
+            metalness: 0.85,
+            roughness: 0.25
+        }),
+
+    gold:
+        new THREE.MeshStandardMaterial({
+            color: 0xd5a928,
+            metalness: 0.8,
+            roughness: 0.2
+        }),
+
+    red:
+        new THREE.MeshStandardMaterial({
+            color: 0x9d2424
         }),
 
     black:
         new THREE.MeshStandardMaterial({
-            color: 0x151515
+            color: 0x101010
+        }),
+
+    white:
+        new THREE.MeshStandardMaterial({
+            color: 0xe9e9e9
+        }),
+
+    eye:
+        new THREE.MeshStandardMaterial({
+            color: 0x222222
+        }),
+
+    eyeBlue:
+        new THREE.MeshStandardMaterial({
+            color: 0x5dd7ff,
+            emissive: 0x164c61,
+            emissiveIntensity: 0.5
         })
 
 };
@@ -206,20 +242,21 @@ const materials = {
 // ============================================================
 
 function box(
-    x,
-    y,
-    z,
+    width,
+    height,
+    depth,
     material
 ) {
 
-    const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            x,
-            y,
-            z
-        ),
-        material
-    );
+    const mesh =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                width,
+                height,
+                depth
+            ),
+            material
+        );
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -231,17 +268,20 @@ function box(
 
 function sphere(
     radius,
-    material
+    material,
+    widthSegments = 16,
+    heightSegments = 12
 ) {
 
-    const mesh = new THREE.Mesh(
-        new THREE.SphereGeometry(
-            radius,
-            16,
-            12
-        ),
-        material
-    );
+    const mesh =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                radius,
+                widthSegments,
+                heightSegments
+            ),
+            material
+        );
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -255,18 +295,20 @@ function cylinder(
     radiusTop,
     radiusBottom,
     height,
-    material
+    material,
+    segments = 12
 ) {
 
-    const mesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            radiusTop,
-            radiusBottom,
-            height,
-            12
-        ),
-        material
-    );
+    const mesh =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                radiusTop,
+                radiusBottom,
+                height,
+                segments
+            ),
+            material
+        );
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -276,8 +318,63 @@ function cylinder(
 }
 
 
+function addLimb(
+    parent,
+    material,
+    radius,
+    length,
+    x,
+    y,
+    z
+) {
+
+    const limb =
+        cylinder(
+            radius,
+            radius * 1.08,
+            length,
+            material
+        );
+
+    limb.position.set(
+        x,
+        y,
+        z
+    );
+
+    parent.add(limb);
+
+    return limb;
+
+}
+
+
 // ============================================================
-// WELT-DEKORATION
+// BODEN
+// ============================================================
+
+const ground =
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            320,
+            320
+        ),
+        new THREE.MeshStandardMaterial({
+            color: 0x416d38,
+            roughness: 1
+        })
+    );
+
+ground.rotation.x =
+    -Math.PI / 2;
+
+ground.receiveShadow = true;
+
+scene.add(ground);
+
+
+// ============================================================
+// BÄUME
 // ============================================================
 
 function createTree(
@@ -293,14 +390,14 @@ function createTree(
             0.45,
             0.65,
             4,
-            materials.leather
+            MAT.leather
         );
 
     trunk.position.y = 2;
 
     tree.add(trunk);
 
-    const leaves =
+    const crown =
         new THREE.Mesh(
             new THREE.ConeGeometry(
                 2.7,
@@ -308,15 +405,15 @@ function createTree(
                 10
             ),
             new THREE.MeshStandardMaterial({
-                color: 0x205a2d
+                color: 0x245b2e
             })
         );
 
-    leaves.position.y = 6;
+    crown.position.y = 6;
 
-    leaves.castShadow = true;
+    crown.castShadow = true;
 
-    tree.add(leaves);
+    tree.add(crown);
 
     tree.position.set(
         x,
@@ -330,29 +427,26 @@ function createTree(
 
 
 [
-    [-15, -15],
-    [10, -20],
-    [25, -5],
-    [-25, 10],
-    [20, 20],
-    [-10, 25],
-    [35, 15],
-    [-35, -20],
-    [5, 35],
+    [-28, -25],
+    [28, -25],
+    [-35, 5],
+    [35, 5],
     [-30, 30],
-    [40, -15],
-    [-40, 10],
-    [15, 40],
-    [-20, 40]
-].forEach(p => {
+    [30, 30],
+    [-5, 38],
+    [10, -38],
+    [45, 20],
+    [-45, -10],
+    [45, -20],
+    [-45, 25]
+].forEach(p =>
+    createTree(p[0], p[1])
+);
 
-    createTree(
-        p[0],
-        p[1]
-    );
 
-});
-
+// ============================================================
+// FELSEN
+// ============================================================
 
 function createRock(
     x,
@@ -366,7 +460,8 @@ function createRock(
                 0
             ),
             new THREE.MeshStandardMaterial({
-                color: 0x777777
+                color: 0x707070,
+                roughness: 1
             })
         );
 
@@ -386,45 +481,32 @@ function createRock(
 
 
 [
-    [8, 8],
-    [-8, -5],
-    [15, 5],
-    [-18, 0],
-    [30, 10],
-    [-30, -5],
-    [5, -30],
-    [-25, -30]
-].forEach(p => {
-
-    createRock(
-        p[0],
-        p[1]
-    );
-
-});
+    [20, 20],
+    [-20, 20],
+    [25, -5],
+    [-25, -5],
+    [40, 0],
+    [-40, 0]
+].forEach(p =>
+    createRock(p[0], p[1])
+);
 
 
 // ============================================================
 // BURG
 // ============================================================
 
-const castle = {
+const castleWalls = [];
 
+const castle = {
     minX: -16,
     maxX: 16,
-
     minZ: -18,
-    maxZ: 12,
-
-    safeRadius: 28
-
+    maxZ: 12
 };
 
 
-const castleWalls = [];
-
-
-function createCastleWall(
+function createWall(
     x,
     y,
     z,
@@ -438,7 +520,7 @@ function createCastleWall(
             width,
             height,
             depth,
-            materials.darkMetal
+            MAT.darkSteel
         );
 
     wall.position.set(
@@ -461,8 +543,8 @@ function createCastleWall(
 }
 
 
-// Hintere Wand
-createCastleWall(
+// Rückwand
+createWall(
     0,
     5,
     -18,
@@ -472,8 +554,8 @@ createCastleWall(
 );
 
 
-// Linke Wand
-createCastleWall(
+// Seiten
+createWall(
     -16,
     5,
     -3,
@@ -482,9 +564,7 @@ createCastleWall(
     30
 );
 
-
-// Rechte Wand
-createCastleWall(
+createWall(
     16,
     5,
     -3,
@@ -494,8 +574,8 @@ createCastleWall(
 );
 
 
-// Vorderwand mit Torbereichen
-createCastleWall(
+// Vorderseite mit Toröffnung
+createWall(
     -11,
     5,
     12,
@@ -504,7 +584,7 @@ createCastleWall(
     2
 );
 
-createCastleWall(
+createWall(
     11,
     5,
     12,
@@ -518,14 +598,15 @@ createCastleWall(
 // BURGTOR
 // ============================================================
 
-const gate = new THREE.Group();
+const gate =
+    new THREE.Group();
 
 const gateLeft =
     box(
-        5,
+        4.5,
         8,
-        1,
-        materials.leather
+        0.8,
+        MAT.leather
     );
 
 gateLeft.position.set(
@@ -539,10 +620,10 @@ gate.add(gateLeft);
 
 const gateRight =
     box(
-        5,
+        4.5,
         8,
-        1,
-        materials.leather
+        0.8,
+        MAT.leather
     );
 
 gateRight.position.set(
@@ -559,7 +640,7 @@ const gateTop =
         10,
         2,
         1,
-        materials.darkMetal
+        MAT.darkSteel
     );
 
 gateTop.position.set(
@@ -587,7 +668,7 @@ function createTower(
             3,
             3.2,
             13,
-            materials.darkMetal
+            MAT.darkSteel
         );
 
     tower.position.set(
@@ -605,7 +686,7 @@ function createTower(
                 5,
                 8
             ),
-            materials.red
+            MAT.red
         );
 
     roof.position.set(
@@ -628,16 +709,16 @@ createTower(16, 12);
 
 
 // ============================================================
-// HOF
+// BURGHOF
 // ============================================================
 
 const courtyard =
     box(
-        20,
+        30,
         0.2,
-        17,
+        27,
         new THREE.MeshStandardMaterial({
-            color: 0x77736a
+            color: 0x77746c
         })
     );
 
@@ -651,7 +732,7 @@ scene.add(courtyard);
 
 
 // ============================================================
-// SPIELER-DATEN
+// SPIELER
 // ============================================================
 
 const player = {
@@ -667,9 +748,7 @@ const player = {
 
     speed: 7,
 
-    runningSpeed: 12,
-
-    onGround: true,
+    runningSpeed: 11,
 
     health: 100,
 
@@ -697,57 +776,56 @@ const player = {
 
 
 // ============================================================
+// INVENTAR
+// ============================================================
+
+const inventory = {
+
+    potions: 3,
+
+    weapons: {
+        "Eisenschwert": 1
+    },
+
+    armors: {
+        "Keine Rüstung": 1
+    }
+
+};
+
+
+// ============================================================
 // WAFFEN
 // ============================================================
 
 const weapons = {
 
     "Eisenschwert": {
-
         damage: 25,
-
         price: 0,
-
-        color: 0xcfd8dc,
-
+        color: 0xbcc6cc,
         length: 2.5
-
     },
 
     "Stahlschwert": {
-
         damage: 40,
-
         price: 100,
-
-        color: 0xb0bec5,
-
+        color: 0xdce5ea,
         length: 2.7
-
     },
 
     "Langschwert": {
-
         damage: 60,
-
         price: 220,
-
-        color: 0xe0e0e0,
-
+        color: 0xf1f1f1,
         length: 3
-
     },
 
     "Königsschwert": {
-
         damage: 90,
-
         price: 450,
-
-        color: 0xd4af37,
-
+        color: 0xd5a928,
         length: 3.2
-
     }
 
 };
@@ -760,399 +838,694 @@ const weapons = {
 const armors = {
 
     "Keine Rüstung": {
-
         bonus: 0,
-
         price: 0
-
     },
 
     "Lederrüstung": {
-
         bonus: 5,
-
         price: 100
-
     },
 
     "Eisenrüstung": {
-
         bonus: 12,
-
         price: 250
-
     },
 
     "Ritterrüstung": {
-
         bonus: 22,
-
         price: 500
-
     }
 
 };
 
 
 // ============================================================
-// INVENTAR
+// HELDENMODELL
 // ============================================================
 
-const inventory = {
+function createHero() {
 
-    potions: 3,
+    const root =
+        new THREE.Group();
 
-    weapons: {
-
-        "Eisenschwert": 1
-
-    },
-
-    armors: {
-
-        "Keine Rüstung": 1
-
-    }
-
-};
+    root.name =
+        "Hero";
 
 
-// ============================================================
-// HELDEN-MODELL
-// ============================================================
+    // --------------------------------------------------------
+    // Beine
+    // --------------------------------------------------------
+
+    const leftLeg =
+        box(
+            0.38,
+            1.55,
+            0.45,
+            MAT.pants
+        );
+
+    leftLeg.position.set(
+        -0.28,
+        0.78,
+        0
+    );
+
+    root.add(leftLeg);
+
+
+    const rightLeg =
+        box(
+            0.38,
+            1.55,
+            0.45,
+            MAT.pants
+        );
+
+    rightLeg.position.set(
+        0.28,
+        0.78,
+        0
+    );
+
+    root.add(rightLeg);
+
+
+    // Schuhe
+    const leftBoot =
+        box(
+            0.48,
+            0.38,
+            0.72,
+            MAT.boot
+        );
+
+    leftBoot.position.set(
+        -0.28,
+        0,
+        -0.12
+    );
+
+    root.add(leftBoot);
+
+
+    const rightBoot =
+        box(
+            0.48,
+            0.38,
+            0.72,
+            MAT.boot
+        );
+
+    rightBoot.position.set(
+        0.28,
+        0,
+        -0.12
+    );
+
+    root.add(rightBoot);
+
+
+    // --------------------------------------------------------
+    // Hüfte
+    // --------------------------------------------------------
+
+    const hips =
+        box(
+            1.05,
+            0.45,
+            0.68,
+            MAT.leather
+        );
+
+    hips.position.y = 1.5;
+
+    root.add(hips);
+
+
+    // --------------------------------------------------------
+    // Körper
+    // --------------------------------------------------------
+
+    const body =
+        box(
+            1.18,
+            1.65,
+            0.72,
+            MAT.clothBlue
+        );
+
+    body.position.y = 2.35;
+
+    root.add(body);
+
+
+    // Brustplatte
+    const chestArmor =
+        box(
+            1.05,
+            1.05,
+            0.12,
+            MAT.iron
+        );
+
+    chestArmor.position.set(
+        0,
+        2.45,
+        -0.42
+    );
+
+    root.add(chestArmor);
+
+
+    // Schulterplatten
+    const shoulderL =
+        sphere(
+            0.32,
+            MAT.iron
+        );
+
+    shoulderL.position.set(
+        -0.72,
+        2.9,
+        0
+    );
+
+    root.add(shoulderL);
+
+
+    const shoulderR =
+        sphere(
+            0.32,
+            MAT.iron
+        );
+
+    shoulderR.position.set(
+        0.72,
+        2.9,
+        0
+    );
+
+    root.add(shoulderR);
+
+
+    // --------------------------------------------------------
+    // Hals
+    // --------------------------------------------------------
+
+    const neck =
+        cylinder(
+            0.22,
+            0.25,
+            0.3,
+            MAT.skin
+        );
+
+    neck.position.y = 3.35;
+
+    root.add(neck);
+
+
+    // --------------------------------------------------------
+    // Kopf
+    // --------------------------------------------------------
+
+    const head =
+        sphere(
+            0.56,
+            MAT.skin,
+            20,
+            16
+        );
+
+    head.position.y = 3.85;
+
+    root.add(head);
+
+
+    // Haare
+    const hair =
+        sphere(
+            0.58,
+            MAT.hair,
+            20,
+            12
+        );
+
+    hair.scale.set(
+        1,
+        0.65,
+        1
+    );
+
+    hair.position.set(
+        0,
+        4.1,
+        0.02
+    );
+
+    root.add(hair);
+
+
+    // Gesicht
+    const eyeL =
+        sphere(
+            0.065,
+            MAT.eye
+        );
+
+    eyeL.position.set(
+        -0.19,
+        3.9,
+        -0.51
+    );
+
+    root.add(eyeL);
+
+
+    const eyeR =
+        sphere(
+            0.065,
+            MAT.eye
+        );
+
+    eyeR.position.set(
+        0.19,
+        3.9,
+        -0.51
+    );
+
+    root.add(eyeR);
+
+
+    // Nase
+    const nose =
+        sphere(
+            0.08,
+            MAT.skinDark
+        );
+
+    nose.scale.z = 1.4;
+
+    nose.position.set(
+        0,
+        3.76,
+        -0.56
+    );
+
+    root.add(nose);
+
+
+    // --------------------------------------------------------
+    // Arme
+    // --------------------------------------------------------
+
+    const leftArm =
+        addLimb(
+            root,
+            MAT.clothBlue,
+            0.19,
+            1.4,
+            -0.8,
+            2.35,
+            0
+        );
+
+    leftArm.rotation.z =
+        -0.08;
+
+
+    const rightArm =
+        addLimb(
+            root,
+            MAT.clothBlue,
+            0.19,
+            1.4,
+            0.8,
+            2.35,
+            0
+        );
+
+    rightArm.rotation.z =
+        0.08;
+
+
+    // Hände
+    const leftHand =
+        sphere(
+            0.21,
+            MAT.skin
+        );
+
+    leftHand.position.set(
+        -0.82,
+        1.55,
+        0
+    );
+
+    root.add(leftHand);
+
+
+    const rightHand =
+        sphere(
+            0.21,
+            MAT.skin
+        );
+
+    rightHand.position.set(
+        0.82,
+        1.55,
+        0
+    );
+
+    root.add(rightHand);
+
+
+    // --------------------------------------------------------
+    // Schwert
+    // --------------------------------------------------------
+
+    const weaponGroup =
+        createSword(
+            player.weapon
+        );
+
+    weaponGroup.position.set(
+        0.9,
+        1.55,
+        -0.18
+    );
+
+    weaponGroup.rotation.z =
+        -0.25;
+
+    weaponGroup.rotation.x =
+        Math.PI / 2;
+
+    root.add(
+        weaponGroup
+    );
+
+
+    root.userData.leftLeg =
+        leftLeg;
+
+    root.userData.rightLeg =
+        rightLeg;
+
+    root.userData.leftArm =
+        leftArm;
+
+    root.userData.rightArm =
+        rightArm;
+
+    root.userData.weapon =
+        weaponGroup;
+
+    root.userData.chestArmor =
+        chestArmor;
+
+    root.userData.shoulderL =
+        shoulderL;
+
+    root.userData.shoulderR =
+        shoulderR;
+
+    return root;
+
+}
+
 
 const playerMesh =
-    new THREE.Group();
-
-
-// Körper
-const playerBody =
-    box(
-        1.15,
-        1.7,
-        0.7,
-        materials.shirt
-    );
-
-playerBody.position.y = 2.2;
-
-playerMesh.add(playerBody);
-
-
-// Gürtel
-const belt =
-    box(
-        1.2,
-        0.2,
-        0.75,
-        materials.leather
-    );
-
-belt.position.y = 1.55;
-
-playerMesh.add(belt);
-
-
-// Kopf
-const playerHead =
-    sphere(
-        0.55,
-        materials.skin
-    );
-
-playerHead.position.y = 3.65;
-
-playerMesh.add(playerHead);
-
-
-// Haare
-const hair =
-    new THREE.Mesh(
-        new THREE.SphereGeometry(
-            0.58,
-            16,
-            8,
-            0,
-            Math.PI * 2,
-            0,
-            Math.PI * 0.5
-        ),
-        materials.hair
-    );
-
-hair.position.y = 3.9;
-
-playerMesh.add(hair);
-
-
-// Augen
-const eye1 =
-    sphere(
-        0.055,
-        materials.white
-    );
-
-eye1.position.set(
-    -0.18,
-    3.7,
-    -0.49
-);
-
-playerMesh.add(eye1);
-
-
-const eye2 =
-    sphere(
-        0.055,
-        materials.white
-    );
-
-eye2.position.set(
-    0.18,
-    3.7,
-    -0.49
-);
-
-playerMesh.add(eye2);
-
-
-// Arme
-const leftArm =
-    cylinder(
-        0.18,
-        0.2,
-        1.45,
-        materials.shirt
-    );
-
-leftArm.position.set(
-    -0.78,
-    2.25,
-    0
-);
-
-leftArm.rotation.z =
-    -0.12;
-
-playerMesh.add(leftArm);
-
-
-const rightArm =
-    cylinder(
-        0.18,
-        0.2,
-        1.45,
-        materials.shirt
-    );
-
-rightArm.position.set(
-    0.78,
-    2.25,
-    0
-);
-
-rightArm.rotation.z =
-    0.12;
-
-playerMesh.add(rightArm);
-
-
-// Hände
-const leftHand =
-    sphere(
-        0.2,
-        materials.skin
-    );
-
-leftHand.position.set(
-    -0.82,
-    1.5,
-    0
-);
-
-playerMesh.add(leftHand);
-
-
-const rightHand =
-    sphere(
-        0.2,
-        materials.skin
-    );
-
-rightHand.position.set(
-    0.82,
-    1.5,
-    0
-);
-
-playerMesh.add(rightHand);
-
-
-// Beine
-const leftLeg =
-    box(
-        0.38,
-        1.4,
-        0.42,
-        materials.pants
-    );
-
-leftLeg.position.set(
-    -0.3,
-    0.65,
-    0
-);
-
-playerMesh.add(leftLeg);
-
-
-const rightLeg =
-    box(
-        0.38,
-        1.4,
-        0.42,
-        materials.pants
-    );
-
-rightLeg.position.set(
-    0.3,
-    0.65,
-    0
-);
-
-playerMesh.add(rightLeg);
-
-
-// Stiefel
-const leftBoot =
-    box(
-        0.48,
-        0.35,
-        0.7,
-        materials.boots
-    );
-
-leftBoot.position.set(
-    -0.3,
-    -0.05,
-    -0.12
-);
-
-playerMesh.add(leftBoot);
-
-
-const rightBoot =
-    box(
-        0.48,
-        0.35,
-        0.7,
-        materials.boots
-    );
-
-rightBoot.position.set(
-    0.3,
-    -0.05,
-    -0.12
-);
-
-playerMesh.add(rightBoot);
-
+    createHero();
 
 playerMesh.position.copy(
     player.position
 );
 
 playerMesh.scale.setScalar(
-    0.9
+    0.95
 );
 
-scene.add(playerMesh);
+scene.add(
+    playerMesh
+);
 
 
 // ============================================================
 // SCHWERT
 // ============================================================
 
-const sword =
-    new THREE.Group();
-
-const blade =
-    box(
-        0.16,
-        2.7,
-        0.3,
-        new THREE.MeshStandardMaterial({
-            color:
-                weapons[player.weapon].color,
-            metalness: 0.85,
-            roughness: 0.2
-        })
-    );
-
-blade.position.y = 1.35;
-
-sword.add(blade);
-
-
-const handle =
-    box(
-        0.2,
-        0.75,
-        0.2,
-        materials.leather
-    );
-
-handle.position.y = -0.35;
-
-sword.add(handle);
-
-
-const guard =
-    box(
-        0.9,
-        0.15,
-        0.18,
-        materials.gold
-    );
-
-guard.position.y = 0;
-
-sword.add(guard);
-
-
-// Waffe in rechte Hand
-sword.position.set(
-    0.95,
-    1.5,
-    -0.05
-);
-
-
-// Das Schwert zeigt zunächst nach vorne
-sword.rotation.x =
-    Math.PI / 2;
-
-playerMesh.add(sword);
-
-
-// ============================================================
-// WAFFE AKTUALISIEREN
-// ============================================================
-
-function updateSwordVisual() {
+function createSword(
+    weaponName
+) {
 
     const data =
-        weapons[player.weapon];
+        weapons[weaponName];
 
-    blade.scale.y =
-        data.length / 2.7;
 
-    blade.material.color.setHex(
-        data.color
+    const sword =
+        new THREE.Group();
+
+
+    const bladeMaterial =
+        new THREE.MeshStandardMaterial({
+            color: data.color,
+            metalness: 0.9,
+            roughness: 0.18
+        });
+
+
+    const blade =
+        box(
+            0.16,
+            data.length,
+            0.3,
+            bladeMaterial
+        );
+
+    blade.position.y =
+        data.length / 2;
+
+    sword.add(blade);
+
+
+    // Spitze
+    const tip =
+        new THREE.Mesh(
+            new THREE.ConeGeometry(
+                0.14,
+                0.42,
+                4
+            ),
+            bladeMaterial
+        );
+
+    tip.rotation.z =
+        Math.PI;
+
+    tip.position.y =
+        data.length + 0.18;
+
+    sword.add(tip);
+
+
+    const guard =
+        box(
+            0.85,
+            0.14,
+            0.16,
+            MAT.gold
+        );
+
+    guard.position.y =
+        0;
+
+    sword.add(guard);
+
+
+    const handle =
+        cylinder(
+            0.1,
+            0.1,
+            0.7,
+            MAT.leather
+        );
+
+    handle.position.y =
+        -0.35;
+
+    sword.add(handle);
+
+
+    const pommel =
+        sphere(
+            0.14,
+            MAT.gold
+        );
+
+    pommel.position.y =
+        -0.72;
+
+    sword.add(pommel);
+
+
+    return sword;
+
+}
+
+
+function updateWeaponVisual() {
+
+    const oldWeapon =
+        playerMesh.userData.weapon;
+
+    if (oldWeapon) {
+
+        playerMesh.remove(
+            oldWeapon
+        );
+
+    }
+
+
+    const newWeapon =
+        createSword(
+            player.weapon
+        );
+
+    newWeapon.position.set(
+        0.9,
+        1.55,
+        -0.18
     );
 
+    newWeapon.rotation.z =
+        -0.25;
+
+    newWeapon.rotation.x =
+        Math.PI / 2;
+
+    playerMesh.add(
+        newWeapon
+    );
+
+    playerMesh.userData.weapon =
+        newWeapon;
+
+
     player.weaponDamage =
-        data.damage;
+        weapons[
+            player.weapon
+        ].damage;
+
+}
+
+
+// ============================================================
+// RÜSTUNG SICHTBAR MACHEN
+// ============================================================
+
+function updateArmorVisual() {
+
+    const armor =
+        player.armor;
+
+
+    const chest =
+        playerMesh.userData
+            .chestArmor;
+
+    const shoulderL =
+        playerMesh.userData
+            .shoulderL;
+
+    const shoulderR =
+        playerMesh.userData
+            .shoulderR;
+
+
+    if (
+        armor ===
+        "Keine Rüstung"
+    ) {
+
+        chest.material =
+            MAT.iron;
+
+        chest.visible =
+            false;
+
+        shoulderL.visible =
+            false;
+
+        shoulderR.visible =
+            false;
+
+        return;
+
+    }
+
+
+    chest.visible =
+        true;
+
+    shoulderL.visible =
+        true;
+
+    shoulderR.visible =
+        true;
+
+
+    if (
+        armor ===
+        "Lederrüstung"
+    ) {
+
+        chest.material =
+            MAT.leather;
+
+        shoulderL.material =
+            MAT.leather;
+
+        shoulderR.material =
+            MAT.leather;
+
+    }
+
+
+    if (
+        armor ===
+        "Eisenrüstung"
+    ) {
+
+        chest.material =
+            MAT.iron;
+
+        shoulderL.material =
+            MAT.iron;
+
+        shoulderR.material =
+            MAT.iron;
+
+    }
+
+
+    if (
+        armor ===
+        "Ritterrüstung"
+    ) {
+
+        chest.material =
+            MAT.steel;
+
+        shoulderL.material =
+            MAT.steel;
+
+        shoulderR.material =
+            MAT.steel;
+
+    }
 
 }
 
@@ -1163,83 +1536,123 @@ function updateSwordVisual() {
 
 const enemyTypes = {
 
-    grunt: {
+    goblin: {
 
-        name: "Grunt",
+        name: "Goblin",
 
-        health: 55,
+        health: 45,
 
-        speed: 2.1,
+        speed: 3.2,
 
-        damage: 10,
+        damage: 8,
 
-        xp: 50,
+        xp: 40,
 
         goldMin: 5,
 
-        goldMax: 15,
+        goldMax: 14,
 
-        scale: 1
+        scale: 0.78,
 
-    },
+        skin: MAT.skinGreen,
 
-    runner: {
-
-        name: "Runner",
-
-        health: 38,
-
-        speed: 4.2,
-
-        damage: 7,
-
-        xp: 65,
-
-        goldMin: 7,
-
-        goldMax: 18,
-
-        scale: 0.9
+        cloth: MAT.clothGreen
 
     },
 
-    tank: {
+    bandit: {
 
-        name: "Tank",
+        name: "Bandit",
 
-        health: 130,
+        health: 65,
 
-        speed: 1.2,
+        speed: 2.7,
+
+        damage: 12,
+
+        xp: 55,
+
+        goldMin: 8,
+
+        goldMax: 20,
+
+        scale: 1,
+
+        skin: MAT.skin,
+
+        cloth: MAT.clothRed
+
+    },
+
+    orc: {
+
+        name: "Ork",
+
+        health: 110,
+
+        speed: 1.8,
 
         damage: 18,
 
-        xp: 110,
+        xp: 100,
 
         goldMin: 12,
 
-        goldMax: 25,
+        goldMax: 28,
 
-        scale: 1.25
+        scale: 1.25,
+
+        skin: MAT.skinGreen,
+
+        cloth: MAT.clothBrown
+
+    },
+
+    knight: {
+
+        name: "Dunkler Ritter",
+
+        health: 150,
+
+        speed: 1.7,
+
+        damage: 22,
+
+        xp: 140,
+
+        goldMin: 15,
+
+        goldMax: 35,
+
+        scale: 1.15,
+
+        skin: MAT.skin,
+
+        cloth: MAT.darkSteel
 
     },
 
     elite: {
 
-        name: "Elite",
+        name: "Elite-Krieger",
 
-        health: 230,
+        health: 260,
 
-        speed: 2,
+        speed: 2.0,
 
-        damage: 25,
+        damage: 28,
 
         xp: 250,
 
         goldMin: 30,
 
-        goldMax: 60,
+        goldMax: 70,
 
-        scale: 1.3
+        scale: 1.35,
+
+        skin: MAT.skinDark,
+
+        cloth: MAT.clothPurple
 
     }
 
@@ -1247,278 +1660,598 @@ const enemyTypes = {
 
 
 // ============================================================
-// GEGNER-MODELL
+// GEGNERMODELL
 // ============================================================
 
 function createEnemyModel(
     type
 ) {
 
-    const group =
-        new THREE.Group();
-
     const data =
         enemyTypes[type];
 
 
-    let bodyMaterial =
-        materials.red;
+    const root =
+        new THREE.Group();
 
-    if (type === "runner") {
-
-        bodyMaterial =
-            new THREE.MeshStandardMaterial({
-                color: 0xc45b20
-            });
-
-    }
-
-    if (type === "tank") {
-
-        bodyMaterial =
-            materials.darkMetal;
-
-    }
-
-    if (type === "elite") {
-
-        bodyMaterial =
-            new THREE.MeshStandardMaterial({
-                color: 0x6d2d8f
-            });
-
-    }
+    root.name =
+        type;
 
 
+    // --------------------------------------------------------
+    // Beine
+    // --------------------------------------------------------
+
+    const legL =
+        box(
+            0.38,
+            1.45,
+            0.42,
+            MAT.boot
+        );
+
+    legL.position.set(
+        -0.28,
+        0.72,
+        0
+    );
+
+    root.add(legL);
+
+
+    const legR =
+        box(
+            0.38,
+            1.45,
+            0.42,
+            MAT.boot
+        );
+
+    legR.position.set(
+        0.28,
+        0.72,
+        0
+    );
+
+    root.add(legR);
+
+
+    // --------------------------------------------------------
     // Körper
+    // --------------------------------------------------------
+
+    const bodyWidth =
+        type === "orc" ||
+        type === "elite"
+            ? 1.4
+            : 1.05;
+
+
+    const bodyHeight =
+        type === "goblin"
+            ? 1.35
+            : 1.65;
+
+
     const body =
         box(
-            type === "tank" ? 1.5 : 1.05,
-            type === "tank" ? 1.9 : 1.6,
+            bodyWidth,
+            bodyHeight,
             0.75,
-            bodyMaterial
+            data.cloth
         );
 
-    body.position.y = 2.1;
+    body.position.y =
+        2.15;
 
-    group.add(body);
+    root.add(body);
 
 
+    // --------------------------------------------------------
+    // Gürtel
+    // --------------------------------------------------------
+
+    const belt =
+        box(
+            bodyWidth + 0.08,
+            0.22,
+            0.8,
+            MAT.leather
+        );
+
+    belt.position.y =
+        1.5;
+
+    root.add(belt);
+
+
+    // --------------------------------------------------------
     // Kopf
+    // --------------------------------------------------------
+
     const head =
         sphere(
-            type === "tank"
-                ? 0.62
-                : 0.52,
-            materials.skinDark
+            type === "orc" ||
+            type === "elite"
+                ? 0.65
+                : 0.5,
+            data.skin,
+            18,
+            14
         );
 
-    head.position.y = 3.55;
+    head.position.y =
+        type === "goblin"
+            ? 3.45
+            : 3.65;
 
-    group.add(head);
+    root.add(head);
 
 
+    // --------------------------------------------------------
+    // Haare
+    // --------------------------------------------------------
+
+    if (
+        type === "bandit"
+    ) {
+
+        const hair =
+            sphere(
+                0.54,
+                MAT.hair,
+                16,
+                10
+            );
+
+        hair.scale.y =
+            0.65;
+
+        hair.position.y =
+            3.88;
+
+        root.add(hair);
+
+    }
+
+
+    if (
+        type === "orc"
+    ) {
+
+        // Orc-Haarkamm
+        const mohawk =
+            new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    0.35,
+                    0.9,
+                    0.55
+                ),
+                MAT.hair
+            );
+
+        mohawk.position.set(
+            0,
+            4.15,
+            0
+        );
+
+        root.add(mohawk);
+
+    }
+
+
+    // --------------------------------------------------------
     // Augen
-    const e1 =
+    // --------------------------------------------------------
+
+    const eyeL =
         sphere(
-            0.06,
-            materials.red
+            0.065,
+            type === "elite"
+                ? MAT.eyeBlue
+                : MAT.eye
         );
 
-    e1.position.set(
+    eyeL.position.set(
         -0.17,
-        3.62,
-        -0.48
+        head.position.y,
+        -0.47
     );
 
-    group.add(e1);
+    root.add(eyeL);
 
 
-    const e2 =
+    const eyeR =
         sphere(
-            0.06,
-            materials.red
+            0.065,
+            type === "elite"
+                ? MAT.eyeBlue
+                : MAT.eye
         );
 
-    e2.position.set(
+    eyeR.position.set(
         0.17,
-        3.62,
-        -0.48
+        head.position.y,
+        -0.47
     );
 
-    group.add(e2);
+    root.add(eyeR);
 
 
+    // --------------------------------------------------------
+    // Ohren für Goblin
+    // --------------------------------------------------------
+
+    if (
+        type === "goblin"
+    ) {
+
+        const earL =
+            new THREE.Mesh(
+                new THREE.ConeGeometry(
+                    0.18,
+                    0.75,
+                    5
+                ),
+                data.skin
+            );
+
+        earL.rotation.z =
+            Math.PI / 2;
+
+        earL.position.set(
+            -0.52,
+            3.55,
+            0
+        );
+
+        root.add(earL);
+
+
+        const earR =
+            new THREE.Mesh(
+                new THREE.ConeGeometry(
+                    0.18,
+                    0.75,
+                    5
+                ),
+                data.skin
+            );
+
+        earR.rotation.z =
+            -Math.PI / 2;
+
+        earR.position.set(
+            0.52,
+            3.55,
+            0
+        );
+
+        root.add(earR);
+
+    }
+
+
+    // --------------------------------------------------------
     // Arme
-    const armWidth =
-        type === "tank"
-            ? 0.27
-            : 0.19;
+    // --------------------------------------------------------
 
-    const armLength =
-        type === "tank"
-            ? 1.5
-            : 1.4;
-
-
-    const arm1 =
-        cylinder(
-            armWidth,
-            armWidth,
-            armLength,
-            bodyMaterial
+    const armL =
+        addLimb(
+            root,
+            data.cloth,
+            type === "orc"
+                ? 0.27
+                : 0.18,
+            type === "orc"
+                ? 1.6
+                : 1.4,
+            -0.75,
+            2.2,
+            0
         );
 
-    arm1.position.set(
-        -0.75,
-        2.2,
-        0
-    );
 
-    arm1.rotation.z =
-        -0.1;
-
-    group.add(arm1);
-
-
-    const arm2 =
-        cylinder(
-            armWidth,
-            armWidth,
-            armLength,
-            bodyMaterial
+    const armR =
+        addLimb(
+            root,
+            data.cloth,
+            type === "orc"
+                ? 0.27
+                : 0.18,
+            type === "orc"
+                ? 1.6
+                : 1.4,
+            0.75,
+            2.2,
+            0
         );
 
-    arm2.position.set(
-        0.75,
-        2.2,
-        0
-    );
 
-    arm2.rotation.z =
-        0.1;
+    // --------------------------------------------------------
+    // Schulterpanzer
+    // --------------------------------------------------------
 
-    group.add(arm2);
-
-
-    // Beine
-    const leg1 =
-        box(
-            0.4,
-            1.45,
-            0.42,
-            materials.pants
-        );
-
-    leg1.position.set(
-        -0.28,
-        0.65,
-        0
-    );
-
-    group.add(leg1);
-
-
-    const leg2 =
-        box(
-            0.4,
-            1.45,
-            0.42,
-            materials.pants
-        );
-
-    leg2.position.set(
-        0.28,
-        0.65,
-        0
-    );
-
-    group.add(leg2);
-
-
-    // Tank-Rüstung
     if (
-        type === "tank" ||
+        type === "knight" ||
+        type === "orc" ||
         type === "elite"
     ) {
 
-        const shoulder1 =
+        const shoulderL =
             sphere(
-                0.38,
-                materials.metal
+                0.35,
+                MAT.iron
             );
 
-        shoulder1.position.set(
+        shoulderL.position.set(
             -0.82,
-            2.8,
+            2.85,
             0
         );
 
-        group.add(
-            shoulder1
+        root.add(
+            shoulderL
         );
 
 
-        const shoulder2 =
+        const shoulderR =
             sphere(
-                0.38,
-                materials.metal
+                0.35,
+                MAT.iron
             );
 
-        shoulder2.position.set(
+        shoulderR.position.set(
             0.82,
-            2.8,
+            2.85,
             0
         );
 
-        group.add(
-            shoulder2
+        root.add(
+            shoulderR
         );
 
     }
 
 
-    // Elite-Krone
+    // --------------------------------------------------------
+    // Helm
+    // --------------------------------------------------------
+
     if (
+        type === "knight" ||
         type === "elite"
     ) {
 
-        const crown =
-            new THREE.Group();
-
-        for (
-            let i = -1;
-            i <= 1;
-            i++
-        ) {
-
-            const spike =
-                new THREE.Mesh(
-                    new THREE.ConeGeometry(
-                        0.13,
-                        0.55,
-                        5
-                    ),
-                    materials.gold
-                );
-
-            spike.position.set(
-                i * 0.22,
-                4.15,
-                0
+        const helmet =
+            sphere(
+                0.62,
+                type === "elite"
+                    ? MAT.gold
+                    : MAT.darkSteel,
+                16,
+                12
             );
 
-            crown.add(spike);
+        helmet.scale.y =
+            0.75;
 
-        }
+        helmet.position.y =
+            3.9;
 
-        group.add(crown);
+        root.add(
+            helmet
+        );
+
+
+        const visor =
+            box(
+                0.75,
+                0.18,
+                0.12,
+                MAT.black
+            );
+
+        visor.position.set(
+            0,
+            3.8,
+            -0.54
+        );
+
+        root.add(
+            visor
+        );
 
     }
 
 
-    group.scale.setScalar(
+    // --------------------------------------------------------
+    // Waffe
+    // --------------------------------------------------------
+
+    let weapon;
+
+
+    if (
+        type === "goblin"
+    ) {
+
+        weapon =
+            createAxe();
+
+    }
+    else if (
+        type === "orc"
+    ) {
+
+        weapon =
+            createLargeAxe();
+
+    }
+    else {
+
+        weapon =
+            createEnemySword();
+
+    }
+
+
+    weapon.position.set(
+        0.82,
+        1.55,
+        -0.1
+    );
+
+    weapon.rotation.x =
+        Math.PI / 2;
+
+    root.add(
+        weapon
+    );
+
+
+    // Animation-Daten
+    root.userData.leftLeg =
+        legL;
+
+    root.userData.rightLeg =
+        legR;
+
+    root.userData.leftArm =
+        armL;
+
+    root.userData.rightArm =
+        armR;
+
+    root.userData.weapon =
+        weapon;
+
+    root.userData.animOffset =
+        Math.random() * 10;
+
+    root.scale.setScalar(
         data.scale
+    );
+
+
+    return root;
+
+}
+
+
+// ============================================================
+// GEGNERWAFFEN
+// ============================================================
+
+function createEnemySword() {
+
+    const group =
+        new THREE.Group();
+
+
+    const blade =
+        box(
+            0.14,
+            2.3,
+            0.22,
+            MAT.iron
+        );
+
+    blade.position.y =
+        1.15;
+
+    group.add(blade);
+
+
+    const guard =
+        box(
+            0.65,
+            0.12,
+            0.15,
+            MAT.gold
+        );
+
+    group.add(guard);
+
+
+    const handle =
+        cylinder(
+            0.09,
+            0.09,
+            0.55,
+            MAT.leather
+        );
+
+    handle.position.y =
+        -0.28;
+
+    group.add(handle);
+
+
+    return group;
+
+}
+
+
+function createAxe() {
+
+    const group =
+        new THREE.Group();
+
+
+    const handle =
+        cylinder(
+            0.07,
+            0.07,
+            1.8,
+            MAT.leather
+        );
+
+    handle.position.y =
+        0.9;
+
+    group.add(handle);
+
+
+    const blade =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.75,
+                0.65,
+                0.18
+            ),
+            MAT.iron
+        );
+
+    blade.position.set(
+        0.35,
+        1.45,
+        0
+    );
+
+    blade.rotation.z =
+        -0.35;
+
+    blade.castShadow = true;
+
+    group.add(blade);
+
+
+    return group;
+
+}
+
+
+function createLargeAxe() {
+
+    const group =
+        createAxe();
+
+    group.scale.set(
+        1.5,
+        1.5,
+        1.5
     );
 
     return group;
@@ -1532,81 +2265,77 @@ function createEnemyModel(
 
 const enemies = [];
 
-const MAX_ENEMIES = 6;
-
-const RESPAWN_TIME = 15;
-
-
 const spawnPoints = [
-
     [40, -15],
     [-40, 15],
     [35, 30],
     [-35, -30],
-    [30, 25],
-    [-30, -20],
-    [45, 5],
-    [-45, -5]
-
+    [42, 10],
+    [-42, -5],
+    [30, -35],
+    [-30, 35]
 ];
 
 
 function chooseEnemyType() {
 
-    const roll =
+    const r =
         Math.random();
 
+
     if (
-        player.level >= 3 &&
-        roll < 0.08
+        player.level >= 4 &&
+        r < 0.08
     ) {
 
         return "elite";
 
     }
 
+
     if (
-        roll < 0.25
+        r < 0.30
     ) {
 
-        return "runner";
+        return "goblin";
 
     }
 
+
     if (
-        roll < 0.42
+        r < 0.60
     ) {
 
-        return "tank";
+        return "bandit";
 
     }
 
-    return "grunt";
+
+    if (
+        r < 0.82
+    ) {
+
+        return "orc";
+
+    }
+
+
+    return "knight";
 
 }
 
 
 function spawnEnemy(
-    typeName = null
+    type = null
 ) {
 
-    if (
-        enemies.filter(
-            e => e.alive
-        ).length >= MAX_ENEMIES
-    ) {
-
-        return;
-
-    }
-
-
-    const type =
-        typeName ||
+    const chosen =
+        type ||
         chooseEnemyType();
 
+
     const data =
-        enemyTypes[type];
+        enemyTypes[chosen];
 
 
     const spawn =
@@ -1618,7 +2347,7 @@ function spawnEnemy(
         ];
 
 
-    const levelMultiplier =
+    const multiplier =
         1 +
         (player.level - 1) *
         0.08;
@@ -1626,7 +2355,7 @@ function spawnEnemy(
 
     const enemy = {
 
-        type,
+        type: chosen,
 
         name: data.name,
 
@@ -1640,13 +2369,13 @@ function spawnEnemy(
         health:
             Math.floor(
                 data.health *
-                levelMultiplier
+                multiplier
             ),
 
         maxHealth:
             Math.floor(
                 data.health *
-                levelMultiplier
+                multiplier
             ),
 
         speed:
@@ -1655,13 +2384,13 @@ function spawnEnemy(
         damage:
             Math.floor(
                 data.damage *
-                levelMultiplier
+                multiplier
             ),
 
         xp:
             Math.floor(
                 data.xp *
-                levelMultiplier
+                multiplier
             ),
 
         goldMin:
@@ -1674,10 +2403,12 @@ function spawnEnemy(
 
         attackCooldown: 0,
 
-        respawnTimer: 0,
+        respawnTimer: 15,
 
         mesh:
-            createEnemyModel(type)
+            createEnemyModel(
+                chosen
+            )
 
     };
 
@@ -1690,143 +2421,153 @@ function spawnEnemy(
         enemy.mesh
     );
 
+
     enemies.push(
         enemy
     );
 
-
-    if (
-        type === "elite"
-    ) {
-
-        showMessage(
-            "👑 ELITE-GEGNER!"
-        );
-
-    }
-
 }
 
 
-spawnEnemy("grunt");
-spawnEnemy("grunt");
-spawnEnemy("runner");
-spawnEnemy("tank");
+spawnEnemy("goblin");
+spawnEnemy("bandit");
+spawnEnemy("orc");
+spawnEnemy("knight");
 
 
 // ============================================================
 // HÄNDLER
 // ============================================================
 
-const merchant =
-    new THREE.Group();
+function createMerchant() {
 
-const merchantBody =
-    box(
-        1.1,
-        1.6,
-        0.7,
-        new THREE.MeshStandardMaterial({
-            color: 0x6d4930
-        })
+    const root =
+        new THREE.Group();
+
+
+    const body =
+        box(
+            1.15,
+            1.65,
+            0.72,
+            MAT.clothBrown
+        );
+
+    body.position.y =
+        2.2;
+
+    root.add(body);
+
+
+    const head =
+        sphere(
+            0.55,
+            MAT.skin
+        );
+
+    head.position.y =
+        3.65;
+
+    root.add(head);
+
+
+    const beard =
+        sphere(
+            0.4,
+            MAT.hair
+        );
+
+    beard.scale.y =
+        0.8;
+
+    beard.position.set(
+        0,
+        3.45,
+        -0.38
     );
 
-merchantBody.position.y = 2.2;
-
-merchant.add(merchantBody);
+    root.add(beard);
 
 
-const merchantHead =
-    sphere(
-        0.55,
-        materials.skin
-    );
+    const hat =
+        cylinder(
+            0.65,
+            0.85,
+            0.35,
+            MAT.gold
+        );
 
-merchantHead.position.y = 3.65;
+    hat.position.y =
+        4.15;
 
-merchant.add(merchantHead);
+    root.add(hat);
 
 
-const merchantHat =
-    cylinder(
+    const armL =
+        addLimb(
+            root,
+            MAT.clothBrown,
+            0.18,
+            1.4,
+            -0.78,
+            2.2,
+            0
+        );
+
+
+    const armR =
+        addLimb(
+            root,
+            MAT.clothBrown,
+            0.18,
+            1.4,
+            0.78,
+            2.2,
+            0
+        );
+
+
+    const legL =
+        box(
+            0.4,
+            1.4,
+            0.4,
+            MAT.boot
+        );
+
+    legL.position.set(
+        -0.3,
         0.65,
-        0.75,
-        0.35,
-        materials.gold
+        0
     );
 
-merchantHat.position.y = 4.15;
-
-merchant.add(merchantHat);
+    root.add(legL);
 
 
-const merchantArm1 =
-    cylinder(
-        0.18,
-        0.2,
-        1.4,
-        materials.leather
+    const legR =
+        box(
+            0.4,
+            1.4,
+            0.4,
+            MAT.boot
+        );
+
+    legR.position.set(
+        0.3,
+        0.65,
+        0
     );
 
-merchantArm1.position.set(
-    -0.75,
-    2.2,
-    0
-);
-
-merchant.add(merchantArm1);
+    root.add(legR);
 
 
-const merchantArm2 =
-    cylinder(
-        0.18,
-        0.2,
-        1.4,
-        materials.leather
-    );
+    return root;
 
-merchantArm2.position.set(
-    0.75,
-    2.2,
-    0
-);
-
-merchant.add(merchantArm2);
+}
 
 
-const merchantLeg1 =
-    box(
-        0.4,
-        1.4,
-        0.4,
-        materials.pants
-    );
-
-merchantLeg1.position.set(
-    -0.3,
-    0.65,
-    0
-);
-
-merchant.add(merchantLeg1);
-
-
-const merchantLeg2 =
-    box(
-        0.4,
-        1.4,
-        0.4,
-        materials.pants
-    );
-
-merchantLeg2.position.set(
-    0.3,
-    0.65,
-    0
-);
-
-merchant.add(merchantLeg2);
-
+const merchant =
+    createMerchant();
 
 merchant.position.set(
     0,
@@ -1865,49 +2606,31 @@ function openShop() {
         "shopMenu";
 
 
-    menu.style.position =
-        "fixed";
-
-    menu.style.left =
-        "50%";
-
-    menu.style.top =
-        "50%";
-
-    menu.style.transform =
-        "translate(-50%, -50%)";
-
-    menu.style.background =
-        "rgba(15,15,20,0.96)";
-
-    menu.style.color =
-        "white";
-
-    menu.style.padding =
-        "25px";
-
-    menu.style.border =
-        "2px solid #d6a72c";
-
-    menu.style.borderRadius =
-        "12px";
-
-    menu.style.minWidth =
-        "420px";
-
-    menu.style.maxHeight =
-        "80vh";
-
-    menu.style.overflow =
-        "auto";
-
-    menu.style.zIndex =
-        "100";
-
-
-    renderShop(
-        menu
+    Object.assign(
+        menu.style,
+        {
+            position: "fixed",
+            left: "50%",
+            top: "50%",
+            transform:
+                "translate(-50%,-50%)",
+            background:
+                "rgba(12,12,18,.97)",
+            color: "white",
+            padding: "25px",
+            border:
+                "2px solid #d5a928",
+            borderRadius: "12px",
+            minWidth: "430px",
+            maxHeight: "80vh",
+            overflow: "auto",
+            zIndex: "1000",
+            fontFamily: "Arial"
+        }
     );
+
+
+    renderShop(menu);
 
     document.body.appendChild(
         menu
@@ -1928,7 +2651,7 @@ function renderShop(
 
         <hr>
 
-        <h3>⚔️ Waffen kaufen</h3>
+        <h3>⚔️ Waffen</h3>
 
     `;
 
@@ -1950,36 +2673,47 @@ function renderShop(
         html += `
 
             <div style="
-                padding:10px;
-                margin:6px 0;
                 border:1px solid #555;
+                padding:10px;
+                margin:7px 0;
                 border-radius:8px;
             ">
 
                 <b>${name}</b><br>
 
-                Schaden: ${weapon.damage}<br>
+                Schaden:
+                ${weapon.damage}<br>
 
-                Preis: ${
+                Preis:
+                ${
                     weapon.price === 0
                         ? "Startwaffe"
-                        : weapon.price + " Gold"
-                }<br>
+                        : weapon.price +
+                          " Gold"
+                }<br><br>
 
                 ${
                     equipped
-                        ? "✓ AUSGERÜSTET"
+                        ? "<b>✓ AUSGERÜSTET</b>"
                         : owned
-                            ? `<button
-                                onclick="equipWeapon('${name}')"
-                              >
-                                AUSGERÜSTEN
-                              </button>`
-                            : `<button
-                                onclick="buyWeapon('${name}')"
-                              >
-                                KAUFEN
-                              </button>`
+                            ? `
+                                <button
+                                    onclick="
+                                    equipWeapon('${name}')
+                                    "
+                                >
+                                    AUSRÜSTEN
+                                </button>
+                              `
+                            : `
+                                <button
+                                    onclick="
+                                    buyWeapon('${name}')
+                                    "
+                                >
+                                    KAUFEN
+                                </button>
+                              `
                 }
 
             </div>
@@ -1990,9 +2724,7 @@ function renderShop(
 
 
     html += `
-
-        <h3>🛡️ Rüstung kaufen</h3>
-
+        <h3>🛡️ Rüstung</h3>
     `;
 
 
@@ -2013,36 +2745,47 @@ function renderShop(
         html += `
 
             <div style="
-                padding:10px;
-                margin:6px 0;
                 border:1px solid #555;
+                padding:10px;
+                margin:7px 0;
                 border-radius:8px;
             ">
 
                 <b>${name}</b><br>
 
-                Schutz: ${armor.bonus}<br>
+                Schutz:
+                ${armor.bonus}<br>
 
-                Preis: ${
+                Preis:
+                ${
                     armor.price === 0
-                        ? "Startausrüstung"
-                        : armor.price + " Gold"
-                }<br>
+                        ? "Start"
+                        : armor.price +
+                          " Gold"
+                }<br><br>
 
                 ${
                     equipped
-                        ? "✓ AUSGERÜSTET"
+                        ? "<b>✓ AUSGERÜSTET</b>"
                         : owned
-                            ? `<button
-                                onclick="equipArmor('${name}')"
-                              >
-                                AUSGERÜSTEN
-                              </button>`
-                            : `<button
-                                onclick="buyArmor('${name}')"
-                              >
-                                KAUFEN
-                              </button>`
+                            ? `
+                                <button
+                                    onclick="
+                                    equipArmor('${name}')
+                                    "
+                                >
+                                    AUSRÜSTEN
+                                </button>
+                              `
+                            : `
+                                <button
+                                    onclick="
+                                    buyArmor('${name}')
+                                    "
+                                >
+                                    KAUFEN
+                                </button>
+                              `
                 }
 
             </div>
@@ -2062,10 +2805,6 @@ function renderShop(
                 .getElementById('shopMenu')
                 .remove()
             "
-            style="
-                padding:10px 20px;
-                cursor:pointer;
-            "
         >
             Schließen
         </button>
@@ -2080,15 +2819,11 @@ function renderShop(
 
 
 // ============================================================
-// WAFFE KAUFEN
+// WAFFEN KAUFEN
 // ============================================================
 
 window.buyWeapon =
 function(name) {
-
-    const weapon =
-        weapons[name];
-
 
     if (
         inventory.weapons[name]
@@ -2103,9 +2838,13 @@ function(name) {
     }
 
 
+    const data =
+        weapons[name];
+
+
     if (
         player.gold <
-        weapon.price
+        data.price
     ) {
 
         showMessage(
@@ -2118,7 +2857,7 @@ function(name) {
 
 
     player.gold -=
-        weapon.price;
+        data.price;
 
 
     inventory.weapons[name] =
@@ -2130,9 +2869,9 @@ function(name) {
     );
 
 
-    updateHUD();
-
     saveGame(false);
+
+    updateHUD();
 
 
     const menu =
@@ -2169,11 +2908,7 @@ function(name) {
         name;
 
 
-    player.weaponDamage =
-        weapons[name].damage;
-
-
-    updateSwordVisual();
+    updateWeaponVisual();
 
     updateHUD();
 
@@ -2185,14 +2920,14 @@ function(name) {
     );
 
 
-    const menu =
+    const shop =
         document.getElementById(
             "shopMenu"
         );
 
-    if (menu) {
+    if (shop) {
 
-        renderShop(menu);
+        renderShop(shop);
 
     }
 
@@ -2206,10 +2941,6 @@ function(name) {
 window.buyArmor =
 function(name) {
 
-    const armor =
-        armors[name];
-
-
     if (
         inventory.armors[name]
     ) {
@@ -2219,9 +2950,13 @@ function(name) {
     }
 
 
+    const data =
+        armors[name];
+
+
     if (
         player.gold <
-        armor.price
+        data.price
     ) {
 
         showMessage(
@@ -2234,16 +2969,11 @@ function(name) {
 
 
     player.gold -=
-        armor.price;
+        data.price;
 
 
     inventory.armors[name] =
         1;
-
-
-    showMessage(
-        `${name} gekauft!`
-    );
 
 
     saveGame(false);
@@ -2251,14 +2981,14 @@ function(name) {
     updateHUD();
 
 
-    const menu =
+    const shop =
         document.getElementById(
             "shopMenu"
         );
 
-    if (menu) {
+    if (shop) {
 
-        renderShop(menu);
+        renderShop(shop);
 
     }
 
@@ -2289,6 +3019,8 @@ function(name) {
         armors[name].bonus;
 
 
+    updateArmorVisual();
+
     updateHUD();
 
     saveGame(false);
@@ -2299,229 +3031,18 @@ function(name) {
     );
 
 
-    const menu =
+    const shop =
         document.getElementById(
             "shopMenu"
         );
 
-    if (menu) {
+    if (shop) {
 
-        renderShop(menu);
+        renderShop(shop);
 
     }
 
 };
-
-
-// ============================================================
-// SHOP-NÄHE
-// ============================================================
-
-function checkMerchant() {
-
-    const distance =
-        player.position.distanceTo(
-            merchant.position
-        );
-
-
-    if (
-        distance < 4
-    ) {
-
-        showInteraction(
-            "E – Händler öffnen"
-        );
-
-        if (
-            keys["KeyE"]
-        ) {
-
-            keys["KeyE"] =
-                false;
-
-            openShop();
-
-        }
-
-    }
-
-}
-
-
-// ============================================================
-// INVENTAR
-// ============================================================
-
-function toggleInventory() {
-
-    const old =
-        document.getElementById(
-            "inventoryMenu"
-        );
-
-    if (old) {
-
-        old.remove();
-
-        return;
-
-    }
-
-
-    const menu =
-        document.createElement(
-            "div"
-        );
-
-    menu.id =
-        "inventoryMenu";
-
-
-    menu.style.position =
-        "fixed";
-
-    menu.style.left =
-        "50%";
-
-    menu.style.top =
-        "50%";
-
-    menu.style.transform =
-        "translate(-50%, -50%)";
-
-    menu.style.background =
-        "rgba(10,10,10,0.96)";
-
-    menu.style.color =
-        "white";
-
-    menu.style.padding =
-        "25px";
-
-    menu.style.border =
-        "2px solid white";
-
-    menu.style.borderRadius =
-        "12px";
-
-    menu.style.zIndex =
-        "100";
-
-    menu.style.minWidth =
-        "380px";
-
-
-    let html = `
-
-        <h2>🎒 Inventar</h2>
-
-        <p>⭐ Level ${player.level}</p>
-
-        <p>🪙 Gold ${player.gold}</p>
-
-        <p>❤️ ${player.health}/${player.maxHealth}</p>
-
-        <p>🧪 Heiltränke: ${inventory.potions}</p>
-
-        <hr>
-
-        <h3>⚔️ Waffen</h3>
-
-    `;
-
-
-    for (
-        const name in inventory.weapons
-    ) {
-
-        html += `
-
-            <p>
-                ${name}
-                –
-                Schaden ${weapons[name].damage}
-
-                ${
-                    player.weapon === name
-                        ? " ✓ AUSGERÜSTET"
-                        : `
-                            <button
-                                onclick="equipWeapon('${name}')"
-                            >
-                                Ausrüsten
-                            </button>
-                        `
-                }
-
-            </p>
-
-        `;
-
-    }
-
-
-    html += `
-        <h3>🛡️ Rüstungen</h3>
-    `;
-
-
-    for (
-        const name in inventory.armors
-    ) {
-
-        html += `
-
-            <p>
-                ${name}
-                –
-                Schutz ${armors[name].bonus}
-
-                ${
-                    player.armor === name
-                        ? " ✓ AUSGERÜSTET"
-                        : `
-                            <button
-                                onclick="equipArmor('${name}')"
-                            >
-                                Ausrüsten
-                            </button>
-                        `
-                }
-
-            </p>
-
-        `;
-
-    }
-
-
-    html += `
-
-        <hr>
-
-        <button
-            onclick="
-                document
-                .getElementById('inventoryMenu')
-                .remove()
-            "
-        >
-            Schließen
-        </button>
-
-    `;
-
-
-    menu.innerHTML =
-        html;
-
-
-    document.body.appendChild(
-        menu
-    );
-
-}
 
 
 // ============================================================
@@ -2540,31 +3061,24 @@ function attack() {
 
 
     player.attackCooldown =
-        0.55;
+        0.65;
 
 
-    // Schwert schlägt nach vorne
-    sword.rotation.z =
-        -Math.PI * 0.8;
+    playerMesh.userData
+        .attacking = true;
+
+    playerMesh.userData
+        .attackTime = 0;
 
 
-    setTimeout(() => {
-
-        sword.rotation.z =
-            0;
-
-    }, 180);
-
-
-    const attackDirection =
+    const forward =
         new THREE.Vector3(
             0,
             0,
             -1
         );
 
-
-    attackDirection.applyAxisAngle(
+    forward.applyAxisAngle(
         new THREE.Vector3(
             0,
             1,
@@ -2572,10 +3086,6 @@ function attack() {
         ),
         cameraYaw
     );
-
-
-    let hit =
-        false;
 
 
     for (
@@ -2599,9 +3109,7 @@ function attack() {
                 );
 
 
-        difference.y =
-            0;
-
+        difference.y = 0;
 
         const distance =
             difference.length();
@@ -2619,17 +3127,11 @@ function attack() {
         difference.normalize();
 
 
-        const dot =
-            attackDirection.dot(
-                difference
-            );
-
-
         if (
-            dot > 0.25
+            forward.dot(
+                difference
+            ) > 0.2
         ) {
-
-            hit = true;
 
             damageEnemy(
                 enemy,
@@ -2656,15 +3158,61 @@ function damageEnemy(
         damage;
 
 
+    enemy.mesh.userData.hitTime =
+        0.12;
+
+
     if (
         enemy.health <= 0
     ) {
 
-        killEnemy(
-            enemy
-        );
+        killEnemy(enemy);
 
     }
+
+}
+
+
+// ============================================================
+// GEGNER TOD
+// ============================================================
+
+function killEnemy(
+    enemy
+) {
+
+    enemy.alive =
+        false;
+
+    enemy.respawnTimer =
+        15;
+
+
+    player.gold +=
+        Math.floor(
+            THREE.MathUtils.randFloat(
+                enemy.goldMin,
+                enemy.goldMax
+            )
+        );
+
+
+    gainXP(
+        enemy.xp
+    );
+
+
+    scene.remove(
+        enemy.mesh
+    );
+
+
+    showMessage(
+        `${enemy.name} besiegt!`
+    );
+
+
+    saveGame(false);
 
 }
 
@@ -2677,10 +3225,15 @@ function updateEnemies(
     delta
 ) {
 
-    const inCastle =
+    if (
         isInsideCastle(
             player.position
-        );
+        )
+    ) {
+
+        return;
+
+    }
 
 
     for (
@@ -2696,16 +3249,6 @@ function updateEnemies(
         }
 
 
-        // Gegner greifen im sicheren Burgbereich nicht an
-        if (
-            inCastle
-        ) {
-
-            continue;
-
-        }
-
-
         const direction =
             player.position
                 .clone()
@@ -2714,8 +3257,7 @@ function updateEnemies(
                 );
 
 
-        direction.y =
-            0;
+        direction.y = 0;
 
 
         const distance =
@@ -2723,22 +3265,18 @@ function updateEnemies(
 
 
         if (
-            distance > 2.4
+            distance > 2.5
         ) {
 
             direction.normalize();
 
 
-            enemy.position.x +=
-                direction.x *
-                enemy.speed *
-                delta;
-
-
-            enemy.position.z +=
-                direction.z *
-                enemy.speed *
-                delta;
+            enemy.position.add(
+                direction.multiplyScalar(
+                    enemy.speed *
+                    delta
+                )
+            );
 
 
             enemy.mesh.lookAt(
@@ -2762,9 +3300,8 @@ function updateEnemies(
                     enemy.damage
                 );
 
-
                 enemy.attackCooldown =
-                    1.5;
+                    1.4;
 
             }
 
@@ -2776,76 +3313,6 @@ function updateEnemies(
         );
 
     }
-
-}
-
-
-// ============================================================
-// GEGNER BESIEGT
-// ============================================================
-
-function killEnemy(
-    enemy
-) {
-
-    if (
-        !enemy.alive
-    ) {
-
-        return;
-
-    }
-
-
-    enemy.alive =
-        false;
-
-
-    enemy.respawnTimer =
-        RESPAWN_TIME;
-
-
-    gainXP(
-        enemy.xp
-    );
-
-
-    const gold =
-        Math.floor(
-            Math.random() *
-            (
-                enemy.goldMax -
-                enemy.goldMin +
-                1
-            )
-        ) +
-        enemy.goldMin;
-
-
-    player.gold +=
-        gold;
-
-
-    if (
-        Math.random() < 0.3
-    ) {
-
-        inventory.potions++;
-
-    }
-
-
-    scene.remove(
-        enemy.mesh
-    );
-
-
-    showMessage(
-        `${enemy.name} besiegt! +${gold} Gold`
-    );
-
-
-    saveGame(false);
 
 }
 
@@ -2879,96 +3346,56 @@ function updateRespawns(
             enemy.respawnTimer <= 0
         ) {
 
-            const type =
-                chooseEnemyType();
+            spawnEnemy();
 
-            const data =
-                enemyTypes[type];
-
-
-            const spawn =
-                spawnPoints[
-                    Math.floor(
-                        Math.random() *
-                        spawnPoints.length
-                    )
-                ];
-
-
-            const levelMultiplier =
-                1 +
-                (player.level - 1) *
-                0.08;
-
-
-            enemy.type =
-                type;
-
-            enemy.name =
-                data.name;
-
-            enemy.health =
-                Math.floor(
-                    data.health *
-                    levelMultiplier
-                );
-
-            enemy.maxHealth =
-                enemy.health;
-
-            enemy.speed =
-                data.speed;
-
-            enemy.damage =
-                Math.floor(
-                    data.damage *
-                    levelMultiplier
-                );
-
-            enemy.xp =
-                Math.floor(
-                    data.xp *
-                    levelMultiplier
-                );
-
-            enemy.goldMin =
-                data.goldMin;
-
-            enemy.goldMax =
-                data.goldMax;
-
-
-            enemy.position.set(
-                spawn[0],
-                0,
-                spawn[1]
-            );
-
-
-            enemy.mesh =
-                createEnemyModel(
-                    type
-                );
-
-
-            enemy.mesh.position.copy(
-                enemy.position
-            );
-
-
-            scene.add(
-                enemy.mesh
-            );
-
-
-            enemy.alive =
-                true;
-
-
-            enemy.attackCooldown =
-                0;
+            enemy.respawnTimer =
+                999999;
 
         }
+
+    }
+
+}
+
+
+// ============================================================
+// SPIELER SCHADEN
+// ============================================================
+
+function damagePlayer(
+    amount
+) {
+
+    if (
+        isInsideCastle(
+            player.position
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const damage =
+        Math.max(
+            1,
+            amount -
+            player.armorBonus
+        );
+
+
+    player.health -=
+        damage;
+
+
+    if (
+        player.health <= 0
+    ) {
+
+        player.health = 0;
+
+        gameOver();
 
     }
 
@@ -2995,84 +3422,24 @@ function gainXP(
         player.xp -=
             player.xpToNextLevel;
 
-        levelUp();
+        player.level++;
 
-    }
+        player.maxHealth +=
+            20;
 
-}
+        player.health =
+            player.maxHealth;
+
+        player.xpToNextLevel =
+            Math.floor(
+                player.xpToNextLevel *
+                1.35
+            );
 
 
-// ============================================================
-// LEVEL UP
-// ============================================================
-
-function levelUp() {
-
-    player.level++;
-
-    player.xpToNextLevel =
-        Math.floor(
-            player.xpToNextLevel *
-            1.35
+        showMessage(
+            `⭐ LEVEL ${player.level}!`
         );
-
-    player.maxHealth +=
-        20;
-
-    player.health =
-        player.maxHealth;
-
-
-    showMessage(
-        `⭐ LEVEL ${player.level}!`
-    );
-
-}
-
-
-// ============================================================
-// SPIELER SCHADEN
-// ============================================================
-
-function damagePlayer(
-    damage
-) {
-
-    if (
-        isInsideCastle(
-            player.position
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    const reducedDamage =
-        Math.max(
-            1,
-            damage -
-            player.armorBonus
-        );
-
-
-    player.health -=
-        reducedDamage;
-
-
-    player.health =
-        Math.max(
-            player.health,
-            0
-        );
-
-
-    if (
-        player.health <= 0
-    ) {
-
-        gameOver();
 
     }
 
@@ -3110,17 +3477,11 @@ function usePotion() {
 
     inventory.potions--;
 
-
     player.health =
         Math.min(
             player.maxHealth,
             player.health + 40
         );
-
-
-    showMessage(
-        "+40 HP"
-    );
 
 
     saveGame(false);
@@ -3129,7 +3490,7 @@ function usePotion() {
 
 
 // ============================================================
-// BURG-BEREICH
+// BURG SICHERHEITSBEREICH
 // ============================================================
 
 function isInsideCastle(
@@ -3147,18 +3508,13 @@ function isInsideCastle(
 
 
 // ============================================================
-// KOLLISION
+// KOLLISIONEN
 // ============================================================
 
 function collidesWithCastle(
     position
 ) {
 
-    const radius =
-        0.7;
-
-
-    // Hintere Wand
     if (
         position.z < -17 &&
         Math.abs(position.x) < 15
@@ -3169,7 +3525,6 @@ function collidesWithCastle(
     }
 
 
-    // Linke Wand
     if (
         position.x < -15 &&
         position.z > -17 &&
@@ -3181,7 +3536,6 @@ function collidesWithCastle(
     }
 
 
-    // Rechte Wand
     if (
         position.x > 15 &&
         position.z > -17 &&
@@ -3193,7 +3547,7 @@ function collidesWithCastle(
     }
 
 
-    // Vorderwand links
+    // Linker Teil des Eingangstores
     if (
         position.z > 11 &&
         position.z < 13 &&
@@ -3206,7 +3560,7 @@ function collidesWithCastle(
     }
 
 
-    // Vorderwand rechts
+    // Rechter Teil des Eingangstores
     if (
         position.z > 11 &&
         position.z < 13 &&
@@ -3240,43 +3594,26 @@ function updatePlayer(
 
     if (
         keys["KeyW"]
-    ) {
-
-        direction.z -= 1;
-
-    }
-
+    ) direction.z -= 1;
 
     if (
         keys["KeyS"]
-    ) {
-
-        direction.z += 1;
-
-    }
-
+    ) direction.z += 1;
 
     if (
         keys["KeyA"]
-    ) {
-
-        direction.x -= 1;
-
-    }
-
+    ) direction.x -= 1;
 
     if (
         keys["KeyD"]
-    ) {
-
-        direction.x += 1;
-
-    }
+    ) direction.x += 1;
 
 
-    if (
-        direction.length() > 0
-    ) {
+    const moving =
+        direction.length() > 0;
+
+
+    if (moving) {
 
         direction.normalize();
 
@@ -3298,26 +3635,24 @@ function updatePlayer(
                 : player.speed;
 
 
-        const nextPosition =
+        const next =
             player.position
                 .clone()
                 .add(
-                    direction
-                        .clone()
-                        .multiplyScalar(
-                            speed * delta
-                        )
+                    direction.multiplyScalar(
+                        speed * delta
+                    )
                 );
 
 
         if (
             !collidesWithCastle(
-                nextPosition
+                next
             )
         ) {
 
             player.position.copy(
-                nextPosition
+                next
             );
 
         }
@@ -3327,50 +3662,76 @@ function updatePlayer(
             cameraYaw;
 
 
-        // einfache Laufbewegung
-        const walk =
-            Math.sin(
-                performance.now() *
-                0.012
-            ) * 0.3;
+        // Laufanimation
+        const t =
+            performance.now() *
+            0.012;
 
 
-        leftLeg.rotation.x =
-            walk;
+        const amount =
+            keys["ShiftLeft"] ||
+            keys["ShiftRight"]
+                ? 0.65
+                : 0.4;
 
-        rightLeg.rotation.x =
-            -walk;
 
-        leftArm.rotation.x =
-            -walk;
+        playerMesh.userData
+            .leftLeg.rotation.x =
+            Math.sin(t) * amount;
 
-        rightArm.rotation.x =
-            walk;
+
+        playerMesh.userData
+            .rightLeg.rotation.x =
+            -Math.sin(t) * amount;
+
+
+        playerMesh.userData
+            .leftArm.rotation.x =
+            -Math.sin(t) * amount;
+
+
+        playerMesh.userData
+            .rightArm.rotation.x =
+            Math.sin(t) * amount;
+
+    }
+    else {
+
+        playerMesh.userData
+            .leftLeg.rotation.x *=
+            0.8;
+
+        playerMesh.userData
+            .rightLeg.rotation.x *=
+            0.8;
+
+        playerMesh.userData
+            .leftArm.rotation.x *=
+            0.8;
+
+        playerMesh.userData
+            .rightArm.rotation.x *=
+            0.8;
 
     }
 
 
+    // Springen
     player.velocityY -=
         25 * delta;
 
 
     player.position.y +=
-        player.velocityY *
-        delta;
+        player.velocityY * delta;
 
 
     if (
         player.position.y <= 0
     ) {
 
-        player.position.y =
-            0;
+        player.position.y = 0;
 
-        player.velocityY =
-            0;
-
-        player.onGround =
-            true;
+        player.velocityY = 0;
 
     }
 
@@ -3383,12 +3744,97 @@ function updatePlayer(
 
 
 // ============================================================
+// ANGRIFFSANIMATION
+// ============================================================
+
+function updateAttackAnimation(
+    delta
+) {
+
+    if (
+        !playerMesh.userData.attacking
+    ) {
+
+        return;
+
+    }
+
+
+    playerMesh.userData.attackTime +=
+        delta;
+
+
+    const t =
+        playerMesh.userData.attackTime;
+
+
+    const weapon =
+        playerMesh.userData.weapon;
+
+
+    const rightArm =
+        playerMesh.userData.rightArm;
+
+
+    if (
+        t < 0.25
+    ) {
+
+        const progress =
+            t / 0.25;
+
+
+        rightArm.rotation.z =
+            0.2 -
+            progress * 1.4;
+
+
+        weapon.rotation.z =
+            -0.25 -
+            progress * 1.8;
+
+    }
+    else if (
+        t < 0.5
+    ) {
+
+        const progress =
+            (t - 0.25) / 0.25;
+
+
+        rightArm.rotation.z =
+            -1.2 +
+            progress * 1.8;
+
+
+        weapon.rotation.z =
+            -2.05 +
+            progress * 2.8;
+
+    }
+    else {
+
+        playerMesh.userData.attacking =
+            false;
+
+        rightArm.rotation.z =
+            0.08;
+
+        weapon.rotation.z =
+            -0.25;
+
+    }
+
+}
+
+
+// ============================================================
 // KAMERA
 // ============================================================
 
 let cameraYaw = 0;
 
-let cameraPitch = -0.25;
+let cameraPitch = -0.2;
 
 
 function updateCamera() {
@@ -3396,15 +3842,13 @@ function updateCamera() {
     const target =
         player.position.clone();
 
-
-    target.y +=
-        2;
+    target.y += 2.1;
 
 
     const offset =
         new THREE.Vector3(
             0,
-            2.5,
+            2.8,
             8
         );
 
@@ -3420,17 +3864,52 @@ function updateCamera() {
 
 
     camera.position.copy(
-        target
-            .clone()
-            .add(
-                offset
-            )
+        target.clone().add(
+            offset
+        )
     );
 
 
     camera.lookAt(
         target
     );
+
+}
+
+
+// ============================================================
+// HÄNDLER-INTERAKTION
+// ============================================================
+
+function checkMerchant() {
+
+    const distance =
+        player.position.distanceTo(
+            merchant.position
+        );
+
+
+    if (
+        distance < 4
+    ) {
+
+        showInteraction(
+            "E – Händler öffnen"
+        );
+
+
+        if (
+            keys["KeyE"]
+        ) {
+
+            keys["KeyE"] =
+                false;
+
+            openShop();
+
+        }
+
+    }
 
 }
 
@@ -3459,32 +3938,24 @@ function showInteraction(
         element.id =
             "interaction";
 
-        element.style.position =
-            "fixed";
 
-        element.style.bottom =
-            "110px";
+        Object.assign(
+            element.style,
+            {
+                position: "fixed",
+                bottom: "110px",
+                left: "50%",
+                transform:
+                    "translateX(-50%)",
+                color: "white",
+                fontSize: "20px",
+                fontWeight: "bold",
+                textShadow:
+                    "2px 2px 4px black",
+                zIndex: "50"
+            }
+        );
 
-        element.style.left =
-            "50%";
-
-        element.style.transform =
-            "translateX(-50%)";
-
-        element.style.color =
-            "white";
-
-        element.style.fontSize =
-            "20px";
-
-        element.style.fontWeight =
-            "bold";
-
-        element.style.textShadow =
-            "2px 2px 4px black";
-
-        element.style.zIndex =
-            "30";
 
         document.body.appendChild(
             element
@@ -3500,6 +3971,187 @@ function showInteraction(
 
 
 // ============================================================
+// INVENTAR
+// ============================================================
+
+function toggleInventory() {
+
+    const old =
+        document.getElementById(
+            "inventoryMenu"
+        );
+
+
+    if (old) {
+
+        old.remove();
+
+        return;
+
+    }
+
+
+    const menu =
+        document.createElement(
+            "div"
+        );
+
+    menu.id =
+        "inventoryMenu";
+
+
+    Object.assign(
+        menu.style,
+        {
+            position: "fixed",
+            left: "50%",
+            top: "50%",
+            transform:
+                "translate(-50%,-50%)",
+            background:
+                "rgba(10,10,15,.97)",
+            color: "white",
+            padding: "25px",
+            border:
+                "2px solid white",
+            borderRadius: "12px",
+            minWidth: "400px",
+            maxHeight: "80vh",
+            overflow: "auto",
+            zIndex: "1000",
+            fontFamily: "Arial"
+        }
+    );
+
+
+    let html = `
+
+        <h2>🎒 Inventar</h2>
+
+        <p>
+            ⭐ Level ${player.level}
+        </p>
+
+        <p>
+            🪙 ${player.gold} Gold
+        </p>
+
+        <p>
+            ❤️ ${player.health}/${player.maxHealth}
+        </p>
+
+        <hr>
+
+        <h3>⚔️ Waffen</h3>
+
+    `;
+
+
+    for (
+        const name in inventory.weapons
+    ) {
+
+        html += `
+
+            <p>
+
+                ${name}
+
+                –
+                ${weapons[name].damage}
+                Schaden
+
+                ${
+                    player.weapon === name
+                        ? " ✓"
+                        : `
+                            <button
+                                onclick="
+                                equipWeapon('${name}')
+                                "
+                            >
+                                Ausrüsten
+                            </button>
+                          `
+                }
+
+            </p>
+
+        `;
+
+    }
+
+
+    html += `
+        <h3>🛡️ Rüstungen</h3>
+    `;
+
+
+    for (
+        const name in inventory.armors
+    ) {
+
+        html += `
+
+            <p>
+
+                ${name}
+
+                –
+                +${armors[name].bonus}
+
+                ${
+                    player.armor === name
+                        ? " ✓"
+                        : `
+                            <button
+                                onclick="
+                                equipArmor('${name}')
+                                "
+                            >
+                                Ausrüsten
+                            </button>
+                          `
+                }
+
+            </p>
+
+        `;
+
+    }
+
+
+    html += `
+
+        <hr>
+
+        <button
+            onclick="
+                document
+                .getElementById(
+                    'inventoryMenu'
+                )
+                .remove()
+            "
+        >
+            Schließen
+        </button>
+
+    `;
+
+
+    menu.innerHTML =
+        html;
+
+
+    document.body.appendChild(
+        menu
+    );
+
+}
+
+
+// ============================================================
 // TASTATUR
 // ============================================================
 
@@ -3507,29 +4159,40 @@ window.addEventListener(
     "keydown",
     event => {
 
-        keys[event.code] =
-            true;
+        keys[event.code] = true;
 
 
         if (
-            event.code === "Space" &&
-            player.onGround
+            event.code === "Space"
         ) {
 
-            player.velocityY =
-                10;
+            if (
+                player.position.y <= 0.01
+            ) {
 
-            player.onGround =
-                false;
+                player.velocityY =
+                    10;
+
+            }
 
         }
 
 
+        // E = Angriff
         if (
             event.code === "KeyE"
         ) {
 
-            attack();
+            // Händler übernimmt E in Nähe
+            if (
+                player.position.distanceTo(
+                    merchant.position
+                ) >= 4
+            ) {
+
+                attack();
+
+            }
 
         }
 
@@ -3587,7 +4250,7 @@ window.addEventListener(
 
 
 // ============================================================
-// MAUS
+// MAUSKAMERA
 // ============================================================
 
 document.addEventListener(
@@ -3597,15 +4260,7 @@ document.addEventListener(
         if (
             event.target.closest(
                 "#shopMenu"
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        if (
+            ) ||
             event.target.closest(
                 "#inventoryMenu"
             )
@@ -3649,8 +4304,8 @@ document.addEventListener(
         cameraPitch =
             THREE.MathUtils.clamp(
                 cameraPitch,
-                -1.2,
-                0.6
+                -1.15,
+                0.55
             );
 
     }
@@ -3666,32 +4321,23 @@ const hud =
         "div"
     );
 
-hud.style.position =
-    "fixed";
 
-hud.style.top =
-    "20px";
+Object.assign(
+    hud.style,
+    {
+        position: "fixed",
+        top: "20px",
+        right: "20px",
+        padding: "14px",
+        background:
+            "rgba(0,0,0,.55)",
+        color: "white",
+        fontFamily: "Arial",
+        lineHeight: "1.6",
+        zIndex: "20"
+    }
+);
 
-hud.style.right =
-    "20px";
-
-hud.style.padding =
-    "15px";
-
-hud.style.background =
-    "rgba(0,0,0,0.55)";
-
-hud.style.color =
-    "white";
-
-hud.style.fontFamily =
-    "Arial";
-
-hud.style.zIndex =
-    "20";
-
-hud.style.lineHeight =
-    "1.6";
 
 document.body.appendChild(
     hud
@@ -3703,29 +4349,21 @@ const healthContainer =
         "div"
     );
 
-healthContainer.style.position =
-    "fixed";
 
-healthContainer.style.bottom =
-    "25px";
-
-healthContainer.style.left =
-    "25px";
-
-healthContainer.style.width =
-    "250px";
-
-healthContainer.style.height =
-    "25px";
-
-healthContainer.style.border =
-    "2px solid white";
-
-healthContainer.style.background =
-    "rgba(0,0,0,0.5)";
-
-healthContainer.style.zIndex =
-    "20";
+Object.assign(
+    healthContainer.style,
+    {
+        position: "fixed",
+        left: "25px",
+        bottom: "25px",
+        width: "250px",
+        height: "25px",
+        border: "2px solid white",
+        background:
+            "rgba(0,0,0,.5)",
+        zIndex: "20"
+    }
+);
 
 
 const healthBar =
@@ -3733,14 +4371,16 @@ const healthBar =
         "div"
     );
 
-healthBar.style.width =
-    "100%";
 
-healthBar.style.height =
-    "100%";
+Object.assign(
+    healthBar.style,
+    {
+        width: "100%",
+        height: "100%",
+        background: "#c62828"
+    }
+);
 
-healthBar.style.background =
-    "#d62828";
 
 healthContainer.appendChild(
     healthBar
@@ -3759,19 +4399,17 @@ function updateHUD() {
 
         ⭐ Level ${player.level}<br>
 
-        XP: ${player.xp}/${player.xpToNextLevel}<br>
+        XP ${player.xp}/${player.xpToNextLevel}<br>
 
         🪙 ${player.gold} Gold<br>
 
         ⚔️ ${player.weapon}
-        (${player.weaponDamage} Schaden)<br>
+        (${player.weaponDamage})<br>
 
         🛡️ ${player.armor}
         (+${player.armorBonus})<br>
 
-        🧪 ${inventory.potions} Heiltränke<br>
-
-        🎒 ${Object.keys(inventory.weapons).length} Waffen
+        🧪 ${inventory.potions}
 
     `;
 
@@ -3804,32 +4442,22 @@ function showMessage(
         text;
 
 
-    message.style.position =
-        "fixed";
-
-    message.style.left =
-        "50%";
-
-    message.style.top =
-        "35%";
-
-    message.style.transform =
-        "translate(-50%, -50%)";
-
-    message.style.color =
-        "white";
-
-    message.style.fontSize =
-        "26px";
-
-    message.style.fontWeight =
-        "bold";
-
-    message.style.textShadow =
-        "2px 2px 5px black";
-
-    message.style.zIndex =
-        "200";
+    Object.assign(
+        message.style,
+        {
+            position: "fixed",
+            left: "50%",
+            top: "32%",
+            transform:
+                "translate(-50%,-50%)",
+            color: "white",
+            fontSize: "25px",
+            fontWeight: "bold",
+            textShadow:
+                "2px 2px 5px black",
+            zIndex: "2000"
+        }
+    );
 
 
     document.body.appendChild(
@@ -3839,7 +4467,7 @@ function showMessage(
 
     setTimeout(
         () => message.remove(),
-        900
+        1000
     );
 
 }
@@ -3853,7 +4481,7 @@ function saveGame(
     show = true
 ) {
 
-    const saveData = {
+    const data = {
 
         player: {
 
@@ -3916,9 +4544,7 @@ function saveGame(
 
     localStorage.setItem(
         "kingdomsBeyondSave",
-        JSON.stringify(
-            saveData
-        )
+        JSON.stringify(data)
     );
 
 
@@ -3947,7 +4573,9 @@ function loadGame() {
 
     if (!raw) {
 
-        updateSwordVisual();
+        updateWeaponVisual();
+
+        updateArmorVisual();
 
         return;
 
@@ -4016,16 +4644,17 @@ function loadGame() {
         );
 
 
-        updateSwordVisual();
+        updateWeaponVisual();
+
+        updateArmorVisual();
 
         updateHUD();
-
 
     }
     catch (error) {
 
         console.error(
-            "Save konnte nicht geladen werden:",
+            "Save-Fehler:",
             error
         );
 
@@ -4064,35 +4693,22 @@ function gameOver() {
         "gameOver";
 
 
-    screen.style.position =
-        "fixed";
-
-    screen.style.inset =
-        "0";
-
-    screen.style.background =
-        "rgba(0,0,0,0.85)";
-
-    screen.style.display =
-        "flex";
-
-    screen.style.flexDirection =
-        "column";
-
-    screen.style.alignItems =
-        "center";
-
-    screen.style.justifyContent =
-        "center";
-
-    screen.style.color =
-        "white";
-
-    screen.style.fontSize =
-        "40px";
-
-    screen.style.zIndex =
-        "300";
+    Object.assign(
+        screen.style,
+        {
+            position: "fixed",
+            inset: "0",
+            background:
+                "rgba(0,0,0,.88)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontSize: "40px",
+            zIndex: "3000"
+        }
+    );
 
 
     screen.innerHTML = `
@@ -4100,13 +4716,13 @@ function gameOver() {
         <div>DU BIST GEFALLEN</div>
 
         <button
-            id="restart"
             style="
                 margin-top:25px;
                 padding:12px 25px;
                 font-size:20px;
                 cursor:pointer;
             "
+            onclick="location.reload()"
         >
             Erneut versuchen
         </button>
@@ -4117,21 +4733,6 @@ function gameOver() {
     document.body.appendChild(
         screen
     );
-
-
-    document
-        .getElementById(
-            "restart"
-        )
-        .onclick = () => {
-
-            localStorage.removeItem(
-                "kingdomsBeyondSave"
-            );
-
-            location.reload();
-
-        };
 
 }
 
@@ -4191,26 +4792,17 @@ function gameLoop() {
     }
 
 
-    updatePlayer(
-        delta
-    );
+    updatePlayer(delta);
 
+    updateAttackAnimation(delta);
 
-    updateEnemies(
-        delta
-    );
+    updateEnemies(delta);
 
-
-    updateRespawns(
-        delta
-    );
-
+    updateRespawns(delta);
 
     checkMerchant();
 
-
     updateCamera();
-
 
     updateHUD();
 
