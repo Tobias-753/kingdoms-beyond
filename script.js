@@ -1,19 +1,14 @@
 import * as THREE from "three";
 
 // =====================================================
-// KINGDOMS BEYOND 0.4
-// RESPAWN + ENEMY TYPES + ELITE
+// KINGDOMS BEYOND 0.5
+// CHARACTERS + ANIMATIONEN + RESPAWN + ENEMIES + ELITE
 // =====================================================
 
 const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(0x87ceeb);
-
-scene.fog = new THREE.Fog(
-    0x87ceeb,
-    40,
-    180
-);
+scene.fog = new THREE.Fog(0x87ceeb, 40, 180);
 
 
 // =====================================================
@@ -45,9 +40,7 @@ renderer.setPixelRatio(
     Math.min(window.devicePixelRatio, 2)
 );
 
-document.body.appendChild(
-    renderer.domElement
-);
+document.body.appendChild(renderer.domElement);
 
 
 // =====================================================
@@ -67,12 +60,7 @@ const sun = new THREE.DirectionalLight(
     2
 );
 
-sun.position.set(
-    50,
-    80,
-    30
-);
-
+sun.position.set(50, 80, 30);
 scene.add(sun);
 
 
@@ -81,18 +69,13 @@ scene.add(sun);
 // =====================================================
 
 const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(
-        300,
-        300
-    ),
+    new THREE.PlaneGeometry(300, 300),
     new THREE.MeshStandardMaterial({
         color: 0x3f6b35
     })
 );
 
-ground.rotation.x =
-    -Math.PI / 2;
-
+ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
 
@@ -102,54 +85,41 @@ scene.add(ground);
 
 function createTree(x, z) {
 
-    const tree =
-        new THREE.Group();
+    const tree = new THREE.Group();
 
-
-    const trunk =
-        new THREE.Mesh(
-            new THREE.CylinderGeometry(
-                0.5,
-                0.7,
-                4,
-                8
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x6b3f22
-            })
-        );
+    const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            0.5,
+            0.7,
+            4,
+            8
+        ),
+        new THREE.MeshStandardMaterial({
+            color: 0x6b3f22
+        })
+    );
 
     trunk.position.y = 2;
-
     tree.add(trunk);
 
-
-    const leaves =
-        new THREE.Mesh(
-            new THREE.ConeGeometry(
-                2.5,
-                6,
-                8
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x1f5c2e
-            })
-        );
+    const leaves = new THREE.Mesh(
+        new THREE.ConeGeometry(
+            2.5,
+            6,
+            8
+        ),
+        new THREE.MeshStandardMaterial({
+            color: 0x1f5c2e
+        })
+    );
 
     leaves.position.y = 6;
-
     tree.add(leaves);
 
-
-    tree.position.set(
-        x,
-        0,
-        z
-    );
+    tree.position.set(x, 0, z);
 
     scene.add(tree);
 }
-
 
 [
     [-15, -15],
@@ -166,40 +136,23 @@ function createTree(x, z) {
     [-40, 10],
     [15, 40],
     [-20, 40]
-].forEach(p => {
-
-    createTree(
-        p[0],
-        p[1]
-    );
-
-});
+].forEach(p => createTree(p[0], p[1]));
 
 
 function createRock(x, z) {
 
-    const rock =
-        new THREE.Mesh(
-            new THREE.DodecahedronGeometry(
-                1.5,
-                0
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x777777
-            })
-        );
-
-    rock.position.set(
-        x,
-        1,
-        z
+    const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(1.5, 0),
+        new THREE.MeshStandardMaterial({
+            color: 0x777777
+        })
     );
 
+    rock.position.set(x, 1, z);
     rock.scale.y = 0.7;
 
     scene.add(rock);
 }
-
 
 [
     [8, 8],
@@ -210,14 +163,7 @@ function createRock(x, z) {
     [-30, -5],
     [5, -30],
     [-25, -30]
-].forEach(p => {
-
-    createRock(
-        p[0],
-        p[1]
-    );
-
-});
+].forEach(p => createRock(p[0], p[1]));
 
 
 // =====================================================
@@ -226,12 +172,11 @@ function createRock(x, z) {
 
 const player = {
 
-    position:
-        new THREE.Vector3(
-            0,
-            1,
-            10
-        ),
+    position: new THREE.Vector3(
+        0,
+        1,
+        10
+    ),
 
     velocityY: 0,
 
@@ -261,7 +206,9 @@ const player = {
 
     armor: "Keine Rüstung",
 
-    armorBonus: 0
+    armorBonus: 0,
+
+    walkTime: 0
 
 };
 
@@ -273,34 +220,301 @@ const player = {
 const inventory = {
 
     "Heiltrank": 2,
-
     "Eisenschwert": 1,
-
     "Leder": 0,
-
     "Eisen": 0,
-
     "Goldmünze": 0
 
 };
 
 
 // =====================================================
+// MATERIALIEN
+// =====================================================
+
+function material(color, roughness = 0.8) {
+
+    return new THREE.MeshStandardMaterial({
+        color,
+        roughness
+    });
+
+}
+
+
+// =====================================================
+// CHARAKTER-BAUER
+// =====================================================
+
+function createCharacter(options = {}) {
+
+    const character = new THREE.Group();
+
+    const skin = material(
+        options.skin || 0xffc49a
+    );
+
+    const shirt = material(
+        options.shirt || 0x315b9b
+    );
+
+    const pants = material(
+        options.pants || 0x20252b
+    );
+
+    const boots = material(
+        options.boots || 0x3b2415
+    );
+
+    const hair = material(
+        options.hair || 0x3b2415
+    );
+
+
+    // -------------------------------------------------
+    // BEINE
+    // -------------------------------------------------
+
+    const leftLeg = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            0.35,
+            0.9,
+            0.4
+        ),
+        pants
+    );
+
+    leftLeg.position.set(
+        -0.23,
+        0.55,
+        0
+    );
+
+    character.add(leftLeg);
+
+
+    const rightLeg = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            0.35,
+            0.9,
+            0.4
+        ),
+        pants
+    );
+
+    rightLeg.position.set(
+        0.23,
+        0.55,
+        0
+    );
+
+    character.add(rightLeg);
+
+
+    // -------------------------------------------------
+    // STIEFEL
+    // -------------------------------------------------
+
+    const leftBoot = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            0.4,
+            0.3,
+            0.55
+        ),
+        boots
+    );
+
+    leftBoot.position.set(
+        -0.23,
+        0.12,
+        -0.05
+    );
+
+    character.add(leftBoot);
+
+
+    const rightBoot = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            0.4,
+            0.3,
+            0.55
+        ),
+        boots
+    );
+
+    rightBoot.position.set(
+        0.23,
+        0.12,
+        -0.05
+    );
+
+    character.add(rightBoot);
+
+
+    // -------------------------------------------------
+    // KÖRPER
+    // -------------------------------------------------
+
+    const body = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            0.9,
+            1.15,
+            0.55
+        ),
+        shirt
+    );
+
+    body.position.y = 1.35;
+
+    character.add(body);
+
+
+    // -------------------------------------------------
+    // ARME
+    // -------------------------------------------------
+
+    const leftArm = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            0.28,
+            1.05,
+            0.3
+        ),
+        shirt
+    );
+
+    leftArm.position.set(
+        -0.62,
+        1.4,
+        0
+    );
+
+    character.add(leftArm);
+
+
+    const rightArm = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            0.28,
+            1.05,
+            0.3
+        ),
+        shirt
+    );
+
+    rightArm.position.set(
+        0.62,
+        1.4,
+        0
+    );
+
+    character.add(rightArm);
+
+
+    // -------------------------------------------------
+    // KOPF
+    // -------------------------------------------------
+
+    const head = new THREE.Mesh(
+        new THREE.SphereGeometry(
+            0.42,
+            16,
+            12
+        ),
+        skin
+    );
+
+    head.position.y = 2.25;
+
+    character.add(head);
+
+
+    // -------------------------------------------------
+    // HAARE
+    // -------------------------------------------------
+
+    const hairMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(
+            0.44,
+            16,
+            8,
+            0,
+            Math.PI * 2,
+            0,
+            Math.PI / 2
+        ),
+        hair
+    );
+
+    hairMesh.position.y = 2.38;
+
+    character.add(hairMesh);
+
+
+    // -------------------------------------------------
+    // AUGEN
+    // -------------------------------------------------
+
+    const eyeMaterial = material(0x111111);
+
+    const leftEye = new THREE.Mesh(
+        new THREE.SphereGeometry(
+            0.045,
+            8,
+            8
+        ),
+        eyeMaterial
+    );
+
+    leftEye.position.set(
+        -0.14,
+        2.28,
+        -0.38
+    );
+
+    character.add(leftEye);
+
+
+    const rightEye = new THREE.Mesh(
+        new THREE.SphereGeometry(
+            0.045,
+            8,
+            8
+        ),
+        eyeMaterial
+    );
+
+    rightEye.position.set(
+        0.14,
+        2.28,
+        -0.38
+    );
+
+    character.add(rightEye);
+
+
+    // -------------------------------------------------
+    // ANIMATIONSDATEN
+    // -------------------------------------------------
+
+    character.userData.leftArm = leftArm;
+    character.userData.rightArm = rightArm;
+    character.userData.leftLeg = leftLeg;
+    character.userData.rightLeg = rightLeg;
+
+    return character;
+
+}
+
+
+// =====================================================
 // SPIELER-MODELL
 // =====================================================
 
-const playerMesh =
-    new THREE.Mesh(
-        new THREE.CapsuleGeometry(
-            0.5,
-            1.2,
-            4,
-            8
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0xeeeeee
-        })
-    );
+const playerMesh = createCharacter({
+    shirt: 0x315b9b,
+    pants: 0x20252b,
+    boots: 0x3b2415,
+    hair: 0x24160f
+});
 
 playerMesh.position.copy(
     player.position
@@ -313,52 +527,47 @@ scene.add(playerMesh);
 // SCHWERT
 // =====================================================
 
-const sword =
-    new THREE.Group();
+const sword = new THREE.Group();
 
-
-const blade =
-    new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.15,
-            2.4,
-            0.35
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0xcfd8dc,
-            metalness: 0.8
-        })
-    );
+const blade = new THREE.Mesh(
+    new THREE.BoxGeometry(
+        0.15,
+        2.4,
+        0.35
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0xcfd8dc,
+        metalness: 0.8
+    })
+);
 
 blade.position.y = 1.3;
-
 sword.add(blade);
 
 
-const handle =
-    new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.2,
-            0.8,
-            0.2
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x5d4037
-        })
-    );
-
-handle.position.y = -0.3;
-
-sword.add(handle);
-
-
-sword.position.set(
-    0.8,
-    1,
-    0
+const handle = new THREE.Mesh(
+    new THREE.BoxGeometry(
+        0.2,
+        0.8,
+        0.2
+    ),
+    material(0x5d4037)
 );
 
-playerMesh.add(sword);
+handle.position.y = -0.3;
+sword.add(handle);
+
+sword.position.set(
+    0.75,
+    -0.15,
+    -0.15
+);
+
+sword.rotation.z = -0.3;
+
+playerMesh.userData.rightArm.add(
+    sword
+);
 
 
 // =====================================================
@@ -383,12 +592,13 @@ const enemyTypes = {
 
         goldMax: 15,
 
-        color: 0x8b2020,
+        shirt: 0x8b2020,
+
+        pants: 0x351414,
 
         scale: 1
 
     },
-
 
     runner: {
 
@@ -406,12 +616,13 @@ const enemyTypes = {
 
         goldMax: 18,
 
-        color: 0xc45b20,
+        shirt: 0xc45b20,
+
+        pants: 0x55220f,
 
         scale: 0.85
 
     },
-
 
     tank: {
 
@@ -429,12 +640,13 @@ const enemyTypes = {
 
         goldMax: 25,
 
-        color: 0x444466,
+        shirt: 0x444466,
+
+        pants: 0x25253b,
 
         scale: 1.3
 
     },
-
 
     elite: {
 
@@ -442,7 +654,7 @@ const enemyTypes = {
 
         health: 220,
 
-        speed: 2.0,
+        speed: 2,
 
         damage: 25,
 
@@ -452,7 +664,9 @@ const enemyTypes = {
 
         goldMax: 60,
 
-        color: 0x8e44ad,
+        shirt: 0x8e44ad,
+
+        pants: 0x321642,
 
         scale: 1.5
 
@@ -471,35 +685,27 @@ const MAX_ENEMIES = 6;
 
 const RESPAWN_TIME = 15;
 
-
 const spawnPoints = [
 
     [12, 2],
-
     [-15, -10],
-
     [20, 15],
-
     [-20, 20],
-
     [30, -15],
-
     [-30, 15],
-
     [35, 30],
-
     [-35, -30]
 
 ];
 
 
+// =====================================================
+// GEGNERTYP WÄHLEN
+// =====================================================
+
 function chooseEnemyType() {
 
-    const roll =
-        Math.random();
-
-
-    // Elite erscheint selten
+    const roll = Math.random();
 
     if (
         player.level >= 3 &&
@@ -510,13 +716,11 @@ function chooseEnemyType() {
 
     }
 
-
     if (roll < 0.25) {
 
         return "runner";
 
     }
-
 
     if (roll < 0.42) {
 
@@ -524,8 +728,41 @@ function chooseEnemyType() {
 
     }
 
-
     return "grunt";
+
+}
+
+
+// =====================================================
+// GEGNER LEBENSBALKEN
+// =====================================================
+
+function createEnemyHealthBar(enemy) {
+
+    const container =
+        document.createElement("div");
+
+    container.style.position = "fixed";
+    container.style.width = "80px";
+    container.style.height = "8px";
+    container.style.background = "rgba(0,0,0,0.7)";
+    container.style.border = "1px solid white";
+    container.style.zIndex = "15";
+    container.style.pointerEvents = "none";
+
+    const bar =
+        document.createElement("div");
+
+    bar.style.width = "100%";
+    bar.style.height = "100%";
+    bar.style.background = "#e53935";
+
+    container.appendChild(bar);
+
+    document.body.appendChild(container);
+
+    enemy.healthBarContainer = container;
+    enemy.healthBar = bar;
 
 }
 
@@ -545,15 +782,11 @@ function spawnEnemy(typeName = null) {
 
     }
 
-
     const type =
-        typeName ||
-        chooseEnemyType();
-
+        typeName || chooseEnemyType();
 
     const data =
         enemyTypes[type];
-
 
     const spawn =
         spawnPoints[
@@ -563,23 +796,21 @@ function spawnEnemy(typeName = null) {
             )
         ];
 
-
     const levelMultiplier =
         1 +
         (player.level - 1) *
         0.08;
 
-
     const enemy = {
 
-        type: type,
+        type,
 
         name: data.name,
 
         position:
             new THREE.Vector3(
                 spawn[0],
-                data.scale,
+                1,
                 spawn[1]
             ),
 
@@ -595,8 +826,7 @@ function spawnEnemy(typeName = null) {
                 levelMultiplier
             ),
 
-        speed:
-            data.speed,
+        speed: data.speed,
 
         damage:
             Math.floor(
@@ -610,11 +840,9 @@ function spawnEnemy(typeName = null) {
                 levelMultiplier
             ),
 
-        goldMin:
-            data.goldMin,
+        goldMin: data.goldMin,
 
-        goldMax:
-            data.goldMax,
+        goldMax: data.goldMax,
 
         alive: true,
 
@@ -624,23 +852,27 @@ function spawnEnemy(typeName = null) {
 
         mesh: null,
 
+        healthBarContainer: null,
+
+        healthBar: null,
+
         scale: data.scale
 
     };
 
 
     enemy.mesh =
-        new THREE.Mesh(
-            new THREE.CapsuleGeometry(
-                0.6,
-                1.4,
-                4,
-                8
-            ),
-            new THREE.MeshStandardMaterial({
-                color: data.color
-            })
-        );
+        createCharacter({
+
+            shirt: data.shirt,
+
+            pants: data.pants,
+
+            boots: 0x171717,
+
+            hair: 0x151515
+
+        });
 
 
     enemy.mesh.scale.set(
@@ -649,25 +881,18 @@ function spawnEnemy(typeName = null) {
         data.scale
     );
 
-
     enemy.mesh.position.copy(
         enemy.position
     );
 
+    scene.add(enemy.mesh);
 
-    scene.add(
-        enemy.mesh
-    );
+    createEnemyHealthBar(enemy);
 
-
-    enemies.push(
-        enemy
-    );
+    enemies.push(enemy);
 
 
-    if (
-        type === "elite"
-    ) {
+    if (type === "elite") {
 
         showMessage(
             "👑 EIN ELITE-GEGNER IST ERSCHIENEN!"
@@ -683,11 +908,8 @@ function spawnEnemy(typeName = null) {
 // =====================================================
 
 spawnEnemy("grunt");
-
 spawnEnemy("grunt");
-
 spawnEnemy("runner");
-
 spawnEnemy("tank");
 
 
@@ -708,36 +930,23 @@ function dropLoot(enemy) {
         ) +
         enemy.goldMin;
 
+    player.gold += gold;
 
-    player.gold +=
-        gold;
+    inventory["Goldmünze"] += gold;
 
+    const roll = Math.random();
 
-    inventory["Goldmünze"] +=
-        gold;
-
-
-    const roll =
-        Math.random();
-
-
-    if (
-        enemy.type === "elite"
-    ) {
+    if (enemy.type === "elite") {
 
         inventory["Eisen"] += 2;
-
         inventory["Leder"] += 2;
-
 
         showMessage(
             `👑 Elite-Loot: +${gold} Gold +2 Eisen +2 Leder`
         );
 
     }
-    else if (
-        roll < 0.35
-    ) {
+    else if (roll < 0.35) {
 
         inventory["Heiltrank"]++;
 
@@ -746,9 +955,7 @@ function dropLoot(enemy) {
         );
 
     }
-    else if (
-        roll < 0.65
-    ) {
+    else if (roll < 0.65) {
 
         inventory["Leder"]++;
 
@@ -767,12 +974,9 @@ function dropLoot(enemy) {
 
     }
 
-
     updateHUD();
 
-    saveGame(
-        false
-    );
+    saveGame(false);
 
 }
 
@@ -783,14 +987,9 @@ function dropLoot(enemy) {
 
 function gainXP(amount) {
 
-    player.xp +=
-        amount;
+    player.xp += amount;
 
-
-    showMessage(
-        `+${amount} XP`
-    );
-
+    showMessage(`+${amount} XP`);
 
     while (
         player.xp >=
@@ -800,17 +999,13 @@ function gainXP(amount) {
         player.xp -=
             player.xpToNextLevel;
 
-
         levelUp();
 
     }
 
-
     updateHUD();
 
-    saveGame(
-        false
-    );
+    saveGame(false);
 
 }
 
@@ -819,25 +1014,18 @@ function levelUp() {
 
     player.level++;
 
-
     player.xpToNextLevel =
         Math.floor(
             player.xpToNextLevel *
             1.35
         );
 
-
-    player.maxHealth +=
-        20;
-
+    player.maxHealth += 20;
 
     player.health =
         player.maxHealth;
 
-
-    player.weaponDamage +=
-        3;
-
+    player.weaponDamage += 3;
 
     showMessage(
         `⭐ LEVEL UP! Level ${player.level}`
@@ -852,47 +1040,45 @@ function levelUp() {
 
 function killEnemy(enemy) {
 
-    if (
-        !enemy.alive
-    ) {
+    if (!enemy.alive) {
 
         return;
 
     }
 
-
-    enemy.alive =
-        false;
-
+    enemy.alive = false;
 
     enemy.respawnTimer =
         RESPAWN_TIME;
 
+    gainXP(enemy.xp);
 
-    enemy.mesh.rotation.z =
-        Math.PI / 2;
-
-
-    gainXP(
-        enemy.xp
-    );
-
-
-    dropLoot(
-        enemy
-    );
-
+    dropLoot(enemy);
 
     showMessage(
         `${enemy.name} besiegt! Respawn in ${RESPAWN_TIME}s`
     );
 
+    if (
+        enemy.healthBarContainer
+    ) {
+
+        enemy.healthBarContainer.remove();
+
+    }
+
+    enemy.mesh.rotation.z =
+        Math.PI / 2;
 
     setTimeout(() => {
 
-        scene.remove(
-            enemy.mesh
-        );
+        if (enemy.mesh) {
+
+            scene.remove(
+                enemy.mesh
+            );
+
+        }
 
     }, 500);
 
@@ -903,166 +1089,148 @@ function killEnemy(enemy) {
 // RESPAWN
 // =====================================================
 
+function respawnEnemy(enemy) {
+
+    const newType =
+        chooseEnemyType();
+
+    const data =
+        enemyTypes[newType];
+
+    const spawn =
+        spawnPoints[
+            Math.floor(
+                Math.random() *
+                spawnPoints.length
+            )
+        ];
+
+    const levelMultiplier =
+        1 +
+        (player.level - 1) *
+        0.08;
+
+    enemy.type =
+        newType;
+
+    enemy.name =
+        data.name;
+
+    enemy.health =
+        Math.floor(
+            data.health *
+            levelMultiplier
+        );
+
+    enemy.maxHealth =
+        enemy.health;
+
+    enemy.speed =
+        data.speed;
+
+    enemy.damage =
+        Math.floor(
+            data.damage *
+            levelMultiplier
+        );
+
+    enemy.xp =
+        Math.floor(
+            data.xp *
+            levelMultiplier
+        );
+
+    enemy.goldMin =
+        data.goldMin;
+
+    enemy.goldMax =
+        data.goldMax;
+
+    enemy.scale =
+        data.scale;
+
+    enemy.position.set(
+        spawn[0],
+        1,
+        spawn[1]
+    );
+
+
+    enemy.mesh =
+        createCharacter({
+
+            shirt: data.shirt,
+
+            pants: data.pants,
+
+            boots: 0x171717,
+
+            hair: 0x151515
+
+        });
+
+
+    enemy.mesh.scale.set(
+        data.scale,
+        data.scale,
+        data.scale
+    );
+
+    enemy.mesh.position.copy(
+        enemy.position
+    );
+
+    scene.add(enemy.mesh);
+
+    createEnemyHealthBar(enemy);
+
+    enemy.alive = true;
+
+    enemy.attackCooldown = 0;
+
+    if (
+        newType === "elite"
+    ) {
+
+        showMessage(
+            "👑 Ein Elite-Gegner ist zurück!"
+        );
+
+    }
+    else {
+
+        showMessage(
+            `${data.name} ist wieder da!`
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// RESPAWN UPDATE
+// =====================================================
+
 function updateRespawns(delta) {
 
     for (
         const enemy of enemies
     ) {
 
-        if (
-            enemy.alive
-        ) {
+        if (enemy.alive) {
 
             continue;
 
         }
 
-
-        enemy.respawnTimer -=
-            delta;
-
+        enemy.respawnTimer -= delta;
 
         if (
             enemy.respawnTimer <= 0
         ) {
 
-            const newType =
-                chooseEnemyType();
-
-
-            const data =
-                enemyTypes[
-                    newType
-                ];
-
-
-            const spawn =
-                spawnPoints[
-                    Math.floor(
-                        Math.random() *
-                        spawnPoints.length
-                    )
-                ];
-
-
-            const levelMultiplier =
-                1 +
-                (player.level - 1) *
-                0.08;
-
-
-            enemy.type =
-                newType;
-
-
-            enemy.name =
-                data.name;
-
-
-            enemy.health =
-                Math.floor(
-                    data.health *
-                    levelMultiplier
-                );
-
-
-            enemy.maxHealth =
-                enemy.health;
-
-
-            enemy.speed =
-                data.speed;
-
-
-            enemy.damage =
-                Math.floor(
-                    data.damage *
-                    levelMultiplier
-                );
-
-
-            enemy.xp =
-                Math.floor(
-                    data.xp *
-                    levelMultiplier
-                );
-
-
-            enemy.goldMin =
-                data.goldMin;
-
-
-            enemy.goldMax =
-                data.goldMax;
-
-
-            enemy.scale =
-                data.scale;
-
-
-            enemy.position.set(
-                spawn[0],
-                data.scale,
-                spawn[1]
-            );
-
-
-            enemy.mesh =
-                new THREE.Mesh(
-                    new THREE.CapsuleGeometry(
-                        0.6,
-                        1.4,
-                        4,
-                        8
-                    ),
-                    new THREE.MeshStandardMaterial({
-                        color: data.color
-                    })
-                );
-
-
-            enemy.mesh.scale.set(
-                data.scale,
-                data.scale,
-                data.scale
-            );
-
-
-            enemy.mesh.position.copy(
-                enemy.position
-            );
-
-
-            scene.add(
-                enemy.mesh
-            );
-
-
-            enemy.alive =
-                true;
-
-
-            enemy.attackCooldown =
-                0;
-
-
-            if (
-                newType ===
-                "elite"
-            ) {
-
-                showMessage(
-                    "👑 Ein Elite-Gegner ist zurück!"
-                );
-
-            }
-            else {
-
-                showMessage(
-                    `${data.name} ist wieder da!`
-                );
-
-            }
+            respawnEnemy(enemy);
 
         }
 
@@ -1085,22 +1253,18 @@ function attack() {
 
     }
 
-
     player.attackCooldown =
         0.55;
-
 
     sword.rotation.z =
         -Math.PI / 2;
 
-
     setTimeout(() => {
 
         sword.rotation.z =
-            0;
+            -0.3;
 
     }, 180);
-
 
     const attackDirection =
         new THREE.Vector3(
@@ -1109,63 +1273,43 @@ function attack() {
             -1
         );
 
-
     attackDirection.applyAxisAngle(
-        new THREE.Vector3(
-            0,
-            1,
-            0
-        ),
+        new THREE.Vector3(0, 1, 0),
         cameraYaw
     );
-
 
     for (
         const enemy of enemies
     ) {
 
-        if (
-            !enemy.alive
-        ) {
+        if (!enemy.alive) {
 
             continue;
 
         }
-
 
         const difference =
             enemy.position
                 .clone()
-                .sub(
-                    player.position
-                );
-
+                .sub(player.position);
 
         const distance =
             difference.length();
 
-
-        if (
-            distance > 4
-        ) {
+        if (distance > 4) {
 
             continue;
 
         }
 
-
         difference.normalize();
-
 
         const dot =
             attackDirection.dot(
                 difference
             );
 
-
-        if (
-            dot > 0.25
-        ) {
+        if (dot > 0.25) {
 
             damageEnemy(
                 enemy,
@@ -1179,27 +1323,29 @@ function attack() {
 }
 
 
-function damageEnemy(
-    enemy,
-    damage
-) {
+function damageEnemy(enemy, damage) {
 
-    enemy.health -=
-        damage;
+    enemy.health -= damage;
 
+    showMessage(`-${damage}`);
 
-    showMessage(
-        `-${damage}`
-    );
+    if (enemy.healthBar) {
 
+        enemy.healthBar.style.width =
+            Math.max(
+                0,
+                enemy.health /
+                enemy.maxHealth *
+                100
+            ) + "%";
+
+    }
 
     if (
         enemy.health <= 0
     ) {
 
-        killEnemy(
-            enemy
-        );
+        killEnemy(enemy);
 
     }
 
@@ -1207,7 +1353,7 @@ function damageEnemy(
 
 
 // =====================================================
-// GEGNER-KI
+// GEGNER KI
 // =====================================================
 
 function updateEnemies(delta) {
@@ -1216,45 +1362,33 @@ function updateEnemies(delta) {
         const enemy of enemies
     ) {
 
-        if (
-            !enemy.alive
-        ) {
+        if (!enemy.alive) {
 
             continue;
 
         }
 
-
         const direction =
             player.position
                 .clone()
-                .sub(
-                    enemy.position
-                );
-
+                .sub(enemy.position);
 
         const distance =
             direction.length();
 
-
-        if (
-            distance > 2.2
-        ) {
+        if (distance > 2.2) {
 
             direction.normalize();
-
 
             enemy.position.x +=
                 direction.x *
                 enemy.speed *
                 delta;
 
-
             enemy.position.z +=
                 direction.z *
                 enemy.speed *
                 delta;
-
 
             enemy.mesh.lookAt(
                 player.position.x,
@@ -1268,7 +1402,6 @@ function updateEnemies(delta) {
             enemy.attackCooldown -=
                 delta;
 
-
             if (
                 enemy.attackCooldown <= 0
             ) {
@@ -1277,7 +1410,6 @@ function updateEnemies(delta) {
                     enemy.damage
                 );
 
-
                 enemy.attackCooldown =
                     1.5;
 
@@ -1285,9 +1417,14 @@ function updateEnemies(delta) {
 
         }
 
-
         enemy.mesh.position.copy(
             enemy.position
+        );
+
+        animateCharacter(
+            enemy.mesh,
+            delta,
+            distance > 2.2
         );
 
     }
@@ -1299,9 +1436,7 @@ function updateEnemies(delta) {
 // SPIELER SCHADEN
 // =====================================================
 
-function damagePlayer(
-    damage
-) {
+function damagePlayer(damage) {
 
     const reducedDamage =
         Math.max(
@@ -1310,10 +1445,8 @@ function damagePlayer(
             player.armorBonus
         );
 
-
     player.health -=
         reducedDamage;
-
 
     player.health =
         Math.max(
@@ -1321,14 +1454,11 @@ function damagePlayer(
             0
         );
 
-
     updateHUD();
-
 
     showMessage(
         `-${reducedDamage} HP`
     );
-
 
     if (
         player.health <= 0
@@ -1359,7 +1489,6 @@ function usePotion() {
 
     }
 
-
     if (
         player.health >=
         player.maxHealth
@@ -1373,9 +1502,7 @@ function usePotion() {
 
     }
 
-
     inventory["Heiltrank"]--;
-
 
     player.health =
         Math.min(
@@ -1383,18 +1510,11 @@ function usePotion() {
             player.health + 40
         );
 
-
-    showMessage(
-        "+40 HP"
-    );
-
+    showMessage("+40 HP");
 
     updateHUD();
 
-
-    saveGame(
-        false
-    );
+    saveGame(false);
 
 }
 
@@ -1410,10 +1530,7 @@ function toggleInventory() {
             "inventoryMenu"
         );
 
-
-    if (
-        menu
-    ) {
+    if (menu) {
 
         menu.remove();
 
@@ -1421,16 +1538,11 @@ function toggleInventory() {
 
     }
 
-
     menu =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     menu.id =
         "inventoryMenu";
-
 
     menu.style.position =
         "fixed";
@@ -1462,34 +1574,25 @@ function toggleInventory() {
     menu.style.minWidth =
         "320px";
 
-
     let html =
         `<h2>🎒 Inventar</h2>`;
-
 
     html +=
         `<p>⭐ Level: ${player.level}</p>`;
 
-
     html +=
         `<p>⭐ XP: ${player.xp}/${player.xpToNextLevel}</p>`;
-
 
     html +=
         `<p>🪙 Gold: ${player.gold}</p>`;
 
-
     html +=
         `<p>⚔️ Waffe: ${player.weapon}</p>`;
-
 
     html +=
         `<p>🛡️ Rüstung: ${player.armor}</p>`;
 
-
-    html +=
-        `<hr>`;
-
+    html += `<hr>`;
 
     for (
         const item in inventory
@@ -1500,19 +1603,17 @@ function toggleInventory() {
 
     }
 
-
     html +=
-        `<button id="closeInventory">Schließen</button>`;
-
+        `<button id="closeInventory">
+            Schließen
+        </button>`;
 
     menu.innerHTML =
         html;
 
-
     document.body.appendChild(
         menu
     );
-
 
     document
         .getElementById(
@@ -1531,52 +1632,40 @@ function toggleInventory() {
 // SPEICHERN
 // =====================================================
 
-function saveGame(
-    show = true
-) {
+function saveGame(show = true) {
 
     const saveData = {
 
         player: {
 
-            health:
-                player.health,
+            health: player.health,
 
-            maxHealth:
-                player.maxHealth,
+            maxHealth: player.maxHealth,
 
-            level:
-                player.level,
+            level: player.level,
 
-            xp:
-                player.xp,
+            xp: player.xp,
 
             xpToNextLevel:
                 player.xpToNextLevel,
 
-            gold:
-                player.gold,
+            gold: player.gold,
 
-            weapon:
-                player.weapon,
+            weapon: player.weapon,
 
             weaponDamage:
                 player.weaponDamage,
 
-            armor:
-                player.armor,
+            armor: player.armor,
 
             armorBonus:
                 player.armorBonus,
 
-            x:
-                player.position.x,
+            x: player.position.x,
 
-            y:
-                player.position.y,
+            y: player.position.y,
 
-            z:
-                player.position.z
+            z: player.position.z
 
         },
 
@@ -1584,18 +1673,12 @@ function saveGame(
 
     };
 
-
     localStorage.setItem(
         "kingdomsBeyondSave",
-        JSON.stringify(
-            saveData
-        )
+        JSON.stringify(saveData)
     );
 
-
-    if (
-        show
-    ) {
+    if (show) {
 
         showMessage(
             "💾 Spiel gespeichert"
@@ -1617,35 +1700,26 @@ function loadGame() {
             "kingdomsBeyondSave"
         );
 
-
-    if (
-        !raw
-    ) {
+    if (!raw) {
 
         return;
 
     }
 
-
     try {
 
         const data =
-            JSON.parse(
-                raw
-            );
-
+            JSON.parse(raw);
 
         Object.assign(
             player,
             data.player
         );
 
-
         Object.assign(
             inventory,
             data.inventory
         );
-
 
         player.position.set(
             data.player.x,
@@ -1653,19 +1727,14 @@ function loadGame() {
             data.player.z
         );
 
-
         playerMesh.position.copy(
             player.position
         );
 
-
         updateHUD();
 
-
     }
-    catch (
-        error
-    ) {
+    catch (error) {
 
         console.error(
             "Save konnte nicht geladen werden:",
@@ -1682,10 +1751,7 @@ function loadGame() {
 // =====================================================
 
 const hud =
-    document.createElement(
-        "div"
-    );
-
+    document.createElement("div");
 
 hud.style.position =
     "fixed";
@@ -1714,17 +1780,11 @@ hud.style.zIndex =
 hud.style.lineHeight =
     "1.6";
 
-
-document.body.appendChild(
-    hud
-);
+document.body.appendChild(hud);
 
 
 const healthContainer =
-    document.createElement(
-        "div"
-    );
-
+    document.createElement("div");
 
 healthContainer.style.position =
     "fixed";
@@ -1752,10 +1812,7 @@ healthContainer.style.zIndex =
 
 
 const healthBar =
-    document.createElement(
-        "div"
-    );
-
+    document.createElement("div");
 
 healthBar.style.width =
     "100%";
@@ -1766,11 +1823,9 @@ healthBar.style.height =
 healthBar.style.background =
     "#d62828";
 
-
 healthContainer.appendChild(
     healthBar
 );
-
 
 document.body.appendChild(
     healthContainer
@@ -1795,7 +1850,8 @@ function updateHUD() {
 
         🎒 ${inventory["Heiltrank"]} Heiltrank<br>
 
-        👾 Gegner: ${
+        👾 Gegner:
+        ${
             enemies.filter(
                 e => e.alive
             ).length
@@ -1803,14 +1859,58 @@ function updateHUD() {
 
     `;
 
-
     healthBar.style.width =
         (
             player.health /
             player.maxHealth *
             100
-        ) +
-        "%";
+        ) + "%";
+
+}
+
+
+// =====================================================
+// GEGNER-LEBENSBALKEN POSITIONIEREN
+// =====================================================
+
+function updateEnemyHealthBars() {
+
+    for (
+        const enemy of enemies
+    ) {
+
+        if (
+            !enemy.alive ||
+            !enemy.healthBarContainer
+        ) {
+
+            continue;
+
+        }
+
+        const position =
+            enemy.position.clone();
+
+        position.y +=
+            3 * enemy.scale;
+
+        position.project(camera);
+
+        const x =
+            (position.x * 0.5 + 0.5) *
+            window.innerWidth;
+
+        const y =
+            (-position.y * 0.5 + 0.5) *
+            window.innerHeight;
+
+        enemy.healthBarContainer.style.left =
+            `${x - 40}px`;
+
+        enemy.healthBarContainer.style.top =
+            `${y}px`;
+
+    }
 
 }
 
@@ -1819,19 +1919,13 @@ function updateHUD() {
 // NACHRICHTEN
 // =====================================================
 
-function showMessage(
-    text
-) {
+function showMessage(text) {
 
     const message =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     message.textContent =
         text;
-
 
     message.style.position =
         "fixed";
@@ -1860,11 +1954,9 @@ function showMessage(
     message.style.zIndex =
         "80";
 
-
     document.body.appendChild(
         message
     );
-
 
     setTimeout(() => {
 
@@ -1883,16 +1975,21 @@ function gameOver() {
 
     document.exitPointerLock();
 
+    if (
+        document.getElementById(
+            "gameOver"
+        )
+    ) {
+
+        return;
+
+    }
 
     const screen =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     screen.id =
         "gameOver";
-
 
     screen.style.position =
         "fixed";
@@ -1924,10 +2021,9 @@ function gameOver() {
     screen.style.zIndex =
         "100";
 
-
     screen.innerHTML = `
 
-        <div>DU BIST GEFALLEN</div>
+        <div>⚔️ DU BIST GEFALLEN</div>
 
         <button
             id="restart"
@@ -1943,11 +2039,9 @@ function gameOver() {
 
     `;
 
-
     document.body.appendChild(
         screen
     );
-
 
     document
         .getElementById(
@@ -1963,19 +2057,90 @@ function gameOver() {
 
 
 // =====================================================
+// CHARAKTER-ANIMATION
+// =====================================================
+
+function animateCharacter(
+    character,
+    delta,
+    moving
+) {
+
+    const data =
+        character.userData;
+
+    if (!data.leftArm) {
+
+        return;
+
+    }
+
+    if (moving) {
+
+        if (
+            character === playerMesh
+        ) {
+
+            player.walkTime +=
+                delta * 10;
+
+        }
+        else {
+
+            character.userData.walkTime =
+                (character.userData.walkTime || 0) +
+                delta * 10;
+
+        }
+
+        const time =
+            character === playerMesh
+                ? player.walkTime
+                : character.userData.walkTime;
+
+        data.leftLeg.rotation.x =
+            Math.sin(time) * 0.55;
+
+        data.rightLeg.rotation.x =
+            -Math.sin(time) * 0.55;
+
+        data.leftArm.rotation.x =
+            -Math.sin(time) * 0.4;
+
+        data.rightArm.rotation.x =
+            Math.sin(time) * 0.4;
+
+    }
+    else {
+
+        data.leftLeg.rotation.x *=
+            0.85;
+
+        data.rightLeg.rotation.x *=
+            0.85;
+
+        data.leftArm.rotation.x *=
+            0.85;
+
+        data.rightArm.rotation.x *=
+            0.85;
+
+    }
+
+}
+
+
+// =====================================================
 // TASTATUR
 // =====================================================
 
 const keys = {};
 
-
 window.addEventListener(
     "keydown",
     event => {
 
-        keys[event.code] =
-            true;
-
+        keys[event.code] = true;
 
         if (
             event.code ===
@@ -1991,7 +2156,6 @@ window.addEventListener(
 
         }
 
-
         if (
             event.code ===
             "KeyE"
@@ -2000,7 +2164,6 @@ window.addEventListener(
             attack();
 
         }
-
 
         if (
             event.code ===
@@ -2011,7 +2174,6 @@ window.addEventListener(
 
         }
 
-
         if (
             event.code ===
             "KeyH"
@@ -2020,7 +2182,6 @@ window.addEventListener(
             usePotion();
 
         }
-
 
         if (
             event.code ===
@@ -2032,7 +2193,6 @@ window.addEventListener(
             saveGame();
 
         }
-
 
         if (
             event.code ===
@@ -2051,8 +2211,7 @@ window.addEventListener(
     "keyup",
     event => {
 
-        keys[event.code] =
-            false;
+        keys[event.code] = false;
 
     }
 );
@@ -2080,7 +2239,6 @@ document.addEventListener(
 
         }
 
-
         if (
             event.target.closest(
                 "#inventoryMenu"
@@ -2090,7 +2248,6 @@ document.addEventListener(
             return;
 
         }
-
 
         document.body.requestPointerLock();
 
@@ -2111,16 +2268,13 @@ document.addEventListener(
 
         }
 
-
         cameraYaw -=
             event.movementX *
             0.002;
 
-
         cameraPitch -=
             event.movementY *
             0.002;
-
 
         cameraPitch =
             THREE.MathUtils.clamp(
@@ -2137,66 +2291,46 @@ document.addEventListener(
 // SPIELER BEWEGUNG
 // =====================================================
 
-function updatePlayer(
-    delta
-) {
+function updatePlayer(delta) {
 
     const direction =
         new THREE.Vector3();
 
-
-    if (
-        keys["KeyW"]
-    ) {
+    if (keys["KeyW"]) {
 
         direction.z -= 1;
 
     }
 
-
-    if (
-        keys["KeyS"]
-    ) {
+    if (keys["KeyS"]) {
 
         direction.z += 1;
 
     }
 
-
-    if (
-        keys["KeyA"]
-    ) {
+    if (keys["KeyA"]) {
 
         direction.x -= 1;
 
     }
 
-
-    if (
-        keys["KeyD"]
-    ) {
+    if (keys["KeyD"]) {
 
         direction.x += 1;
 
     }
 
+    const moving =
+        direction.length() > 0;
 
-    if (
-        direction.length() > 0
-    ) {
+    if (moving) {
 
         direction.normalize();
 
-
         direction.applyAxisAngle(
-            new THREE.Vector3(
-                0,
-                1,
-                0
-            ),
+            new THREE.Vector3(0, 1, 0),
             cameraYaw
         );
-
 
         const speed =
             keys["ShiftLeft"] ||
@@ -2204,46 +2338,47 @@ function updatePlayer(
                 ? player.runningSpeed
                 : player.speed;
 
-
         player.position.x +=
             direction.x *
             speed *
             delta;
-
 
         player.position.z +=
             direction.z *
             speed *
             delta;
 
+        playerMesh.rotation.y =
+            Math.atan2(
+                direction.x,
+                direction.z
+            );
+
     }
 
+    animateCharacter(
+        playerMesh,
+        delta,
+        moving
+    );
 
     player.velocityY -=
-        25 *
-        delta;
-
+        25 * delta;
 
     player.position.y +=
-        player.velocityY *
-        delta;
-
+        player.velocityY * delta;
 
     if (
         player.position.y <= 1
     ) {
 
-        player.position.y =
-            1;
+        player.position.y = 1;
 
-        player.velocityY =
-            0;
+        player.velocityY = 0;
 
-        player.onGround =
-            true;
+        player.onGround = true;
 
     }
-
 
     playerMesh.position.copy(
         player.position
@@ -2261,18 +2396,14 @@ function updateCamera() {
     const target =
         player.position.clone();
 
-
-    target.y +=
-        1;
-
+    target.y += 1.2;
 
     const offset =
         new THREE.Vector3(
             0,
-            2,
+            2.5,
             8
         );
-
 
     offset.applyEuler(
         new THREE.Euler(
@@ -2283,19 +2414,11 @@ function updateCamera() {
         )
     );
 
-
     camera.position.copy(
-        target
-            .clone()
-            .add(
-                offset
-            )
+        target.clone().add(offset)
     );
 
-
-    camera.lookAt(
-        target
-    );
+    camera.lookAt(target);
 
 }
 
@@ -2312,9 +2435,7 @@ window.addEventListener(
             window.innerWidth /
             window.innerHeight;
 
-
         camera.updateProjectionMatrix();
-
 
         renderer.setSize(
             window.innerWidth,
@@ -2339,13 +2460,11 @@ function gameLoop() {
         gameLoop
     );
 
-
     const delta =
         Math.min(
             clock.getDelta(),
             0.05
         );
-
 
     if (
         player.attackCooldown > 0
@@ -2356,27 +2475,17 @@ function gameLoop() {
 
     }
 
+    updatePlayer(delta);
 
-    updatePlayer(
-        delta
-    );
+    updateEnemies(delta);
 
-
-    updateEnemies(
-        delta
-    );
-
-
-    updateRespawns(
-        delta
-    );
-
+    updateRespawns(delta);
 
     updateCamera();
 
+    updateEnemyHealthBars();
 
     updateHUD();
-
 
     renderer.render(
         scene,
