@@ -454,7 +454,13 @@ let cameraPitch = -0.25;
 
 document.addEventListener(
     "click",
-    () => {
+    (event) => {
+
+        if (
+            event.target.id === "restart"
+        ) {
+            return;
+        }
 
         document.body.requestPointerLock();
 
