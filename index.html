@@ -3,15 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Kingdoms Beyond</title>
 
     <link rel="stylesheet" href="style.css">
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+        }
+    }
+    </script>
 </head>
 
 <body>
-    <h1>Kingdoms Beyond</h1>
-    <p>Die Welt entsteht...</p>
 
-    <script src="script.js"></script>
+    <div id="ui">
+        <div id="title">KINGDOMS BEYOND</div>
+        <div id="instructions">
+            WASD – Bewegen<br>
+            SHIFT – Rennen<br>
+            SPACE – Springen<br>
+            Maus – Kamera
+        </div>
+    </div>
+
+    <div id="crosshair">+</div>
+
+    <script type="module" src="script.js"></script>
+
 </body>
 </html>
