@@ -2,7 +2,11 @@ import * as THREE from "three";
 
 // =====================================================
 // KINGDOMS BEYOND 0.6
-// BURG + HÄUSER + SEE + HÄNDLER + CHARAKTER
+// BURG + HÄNDLER + CHARAKTERE + KAMPF + RESPAWN
+// =====================================================
+
+// =====================================================
+// SZENE
 // =====================================================
 
 const scene = new THREE.Scene();
@@ -12,19 +16,21 @@ scene.background = new THREE.Color(0x87ceeb);
 scene.fog = new THREE.Fog(
     0x87ceeb,
     45,
-    220
+    190
 );
+
 
 // =====================================================
 // KAMERA
 // =====================================================
 
 const camera = new THREE.PerspectiveCamera(
-    70,
+    75,
     window.innerWidth / window.innerHeight,
     0.1,
-    600
+    500
 );
+
 
 // =====================================================
 // RENDERER
@@ -43,11 +49,10 @@ renderer.setPixelRatio(
     Math.min(window.devicePixelRatio, 2)
 );
 
-renderer.shadowMap.enabled = true;
-
 document.body.appendChild(
     renderer.domElement
 );
+
 
 // =====================================================
 // LICHT
@@ -56,168 +61,88 @@ document.body.appendChild(
 scene.add(
     new THREE.HemisphereLight(
         0xffffff,
-        0x405030,
+        0x405040,
         2.2
     )
 );
 
-const sun = new THREE.DirectionalLight(
-    0xffffff,
-    2.4
-);
+const sun =
+    new THREE.DirectionalLight(
+        0xffffff,
+        2.2
+    );
 
 sun.position.set(
-    60,
-    100,
-    40
+    50,
+    80,
+    30
 );
 
-sun.castShadow = true;
-
-sun.shadow.mapSize.width = 2048;
-sun.shadow.mapSize.height = 2048;
-
 scene.add(sun);
+
 
 // =====================================================
 // BODEN
 // =====================================================
 
-const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(
-        360,
-        360
-    ),
-    new THREE.MeshStandardMaterial({
-        color: 0x477a3c,
-        roughness: 1
-    })
-);
+const ground =
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            300,
+            300
+        ),
+        new THREE.MeshStandardMaterial({
+            color: 0x416d38
+        })
+    );
 
 ground.rotation.x =
     -Math.PI / 2;
 
-ground.receiveShadow = true;
-
 scene.add(ground);
 
-// =====================================================
-// MATERIALIEN
-// =====================================================
-
-const materials = {
-
-    wood: new THREE.MeshStandardMaterial({
-        color: 0x70452b
-    }),
-
-    roof: new THREE.MeshStandardMaterial({
-        color: 0x472b25
-    }),
-
-    stone: new THREE.MeshStandardMaterial({
-        color: 0x777777
-    }),
-
-    stoneDark: new THREE.MeshStandardMaterial({
-        color: 0x4d4d55
-    }),
-
-    grass: new THREE.MeshStandardMaterial({
-        color: 0x477a3c
-    }),
-
-    water: new THREE.MeshStandardMaterial({
-        color: 0x3d8fbd,
-        transparent: true,
-        opacity: 0.82,
-        roughness: 0.15,
-        metalness: 0.05
-    }),
-
-    skin: new THREE.MeshStandardMaterial({
-        color: 0xc88f6a
-    }),
-
-    shirt: new THREE.MeshStandardMaterial({
-        color: 0x385a78
-    }),
-
-    pants: new THREE.MeshStandardMaterial({
-        color: 0x303442
-    }),
-
-    boots: new THREE.MeshStandardMaterial({
-        color: 0x29211d
-    }),
-
-    hair: new THREE.MeshStandardMaterial({
-        color: 0x3b2418
-    }),
-
-    sword: new THREE.MeshStandardMaterial({
-        color: 0xd8dde2,
-        metalness: 0.9,
-        roughness: 0.2
-    }),
-
-    swordHandle: new THREE.MeshStandardMaterial({
-        color: 0x5d4037
-    }),
-
-    gold: new THREE.MeshStandardMaterial({
-        color: 0xd4af37,
-        metalness: 0.8
-    })
-
-};
 
 // =====================================================
-// WELT – BÄUME
+// WELT-DEKORATION
 // =====================================================
 
-function createTree(x, z, scale = 1) {
+function createTree(x, z) {
 
-    const tree = new THREE.Group();
+    const tree =
+        new THREE.Group();
 
-    const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            0.45,
-            0.65,
-            4,
-            8
-        ),
-        materials.wood
-    );
+    const trunk =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.45,
+                0.65,
+                4,
+                8
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x70452b
+            })
+        );
 
     trunk.position.y = 2;
 
-    trunk.castShadow = true;
-
     tree.add(trunk);
 
-    const leaves = new THREE.Mesh(
-        new THREE.ConeGeometry(
-            2.6,
-            6,
-            8
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x205d2e
-        })
-    );
+    const leaves =
+        new THREE.Mesh(
+            new THREE.ConeGeometry(
+                2.5,
+                6,
+                8
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x245c2d
+            })
+        );
 
     leaves.position.y = 6;
 
-    leaves.castShadow = true;
-
     tree.add(leaves);
-
-    tree.scale.set(
-        scale,
-        scale,
-        scale
-    );
 
     tree.position.set(
         x,
@@ -228,48 +153,44 @@ function createTree(x, z, scale = 1) {
     scene.add(tree);
 }
 
-const treePositions = [
-    [-25, -25],
-    [18, -28],
-    [38, -5],
-    [-38, 12],
-    [28, 28],
-    [-15, 34],
-    [45, 18],
-    [-45, -18],
-    [8, 42],
-    [-32, 38],
-    [48, -28],
-    [-48, 28],
-    [20, 48],
-    [-20, 50],
-    [55, 5],
-    [-55, -5]
-];
 
-treePositions.forEach((p, i) => {
-
+[
+    [-15, -15],
+    [10, -20],
+    [25, -5],
+    [-25, 10],
+    [20, 20],
+    [-10, 25],
+    [35, 15],
+    [-35, -20],
+    [5, 35],
+    [-30, 30],
+    [40, -15],
+    [-40, 10],
+    [15, 40],
+    [-20, 40],
+    [50, 25],
+    [-50, -15]
+].forEach(p => {
     createTree(
         p[0],
-        p[1],
-        0.85 + (i % 3) * 0.15
+        p[1]
     );
-
 });
 
-// =====================================================
-// FELSEN
-// =====================================================
 
-function createRock(x, z, scale = 1) {
+function createRock(x, z) {
 
-    const rock = new THREE.Mesh(
-        new THREE.DodecahedronGeometry(
-            1.5,
-            0
-        ),
-        materials.stone
-    );
+    const rock =
+        new THREE.Mesh(
+            new THREE.DodecahedronGeometry(
+                1.5,
+                0
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x777777
+            })
+        );
 
     rock.position.set(
         x,
@@ -277,229 +198,28 @@ function createRock(x, z, scale = 1) {
         z
     );
 
-    rock.scale.set(
-        scale,
-        scale * 0.7,
-        scale
-    );
-
-    rock.rotation.y =
-        Math.random() * Math.PI;
-
-    rock.castShadow = true;
+    rock.scale.y = 0.7;
 
     scene.add(rock);
 }
 
-[
-    [8, 8, 1],
-    [-8, -5, 0.8],
-    [15, 5, 1.2],
-    [-18, 0, 1],
-    [32, 10, 1.3],
-    [-30, -5, 1],
-    [5, -32, 1.2],
-    [-25, -30, 0.8],
-    [40, -10, 1.1],
-    [-40, 0, 1.4]
-].forEach(p => {
 
+[
+    [8, 8],
+    [-8, -5],
+    [15, 5],
+    [-18, 0],
+    [30, 10],
+    [-30, -5],
+    [5, -30],
+    [-25, -30]
+].forEach(p => {
     createRock(
         p[0],
-        p[1],
-        p[2]
+        p[1]
     );
-
 });
 
-// =====================================================
-// SEE
-// =====================================================
-
-const lake = new THREE.Mesh(
-    new THREE.CircleGeometry(
-        18,
-        48
-    ),
-    materials.water
-);
-
-lake.rotation.x =
-    -Math.PI / 2;
-
-lake.position.set(
-    -55,
-    0.05,
-    55
-);
-
-lake.scale.set(
-    1.4,
-    0.75,
-    1
-);
-
-scene.add(lake);
-
-// =====================================================
-// WEGE
-// =====================================================
-
-function createPath(
-    x,
-    z,
-    width,
-    length,
-    rotation = 0
-) {
-
-    const path = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            width,
-            0.08,
-            length
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x9b7b52
-        })
-    );
-
-    path.position.set(
-        x,
-        0.04,
-        z
-    );
-
-    path.rotation.y =
-        rotation;
-
-    scene.add(path);
-}
-
-createPath(
-    0,
-    18,
-    8,
-    90,
-    0
-);
-
-createPath(
-    0,
-    -5,
-    7,
-    70,
-    Math.PI / 2
-);
-
-createPath(
-    0,
-    18,
-    7,
-    80,
-    Math.PI / 4
-);
-
-// =====================================================
-// HÄUSER
-// =====================================================
-
-function createHouse(
-    x,
-    z,
-    rotation = 0
-) {
-
-    const house =
-        new THREE.Group();
-
-    const body =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                8,
-                5,
-                7
-            ),
-            materials.wood
-        );
-
-    body.position.y = 2.5;
-
-    body.castShadow = true;
-
-    house.add(body);
-
-    const roof =
-        new THREE.Mesh(
-            new THREE.ConeGeometry(
-                5.7,
-                3.8,
-                4
-            ),
-            materials.roof
-        );
-
-    roof.rotation.y =
-        Math.PI / 4;
-
-    roof.position.y = 6.8;
-
-    roof.castShadow = true;
-
-    house.add(roof);
-
-    const door =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                1.4,
-                2.5,
-                0.15
-            ),
-            materials.wood
-        );
-
-    door.position.set(
-        0,
-        1.25,
-        3.55
-    );
-
-    door.material =
-        new THREE.MeshStandardMaterial({
-            color: 0x241810
-        });
-
-    house.add(door);
-
-    house.position.set(
-        x,
-        0,
-        z
-    );
-
-    house.rotation.y =
-        rotation;
-
-    scene.add(house);
-}
-
-createHouse(
-    28,
-    -8,
-    0
-);
-
-createHouse(
-    35,
-    -20,
-    0.2
-);
-
-createHouse(
-    -28,
-    8,
-    -0.2
-);
 
 // =====================================================
 // BURG
@@ -508,133 +228,322 @@ createHouse(
 const castle =
     new THREE.Group();
 
-function castleTower(
+castle.position.set(
+    0,
+    0,
+    -35
+);
+
+scene.add(castle);
+
+
+// Burgmauer
+
+const wallMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x8b8b82
+    });
+
+
+function castleWall(
+    x,
+    y,
+    z,
+    width,
+    height,
+    depth
+) {
+
+    const wall =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                width,
+                height,
+                depth
+            ),
+            wallMaterial
+        );
+
+    wall.position.set(
+        x,
+        y,
+        z
+    );
+
+    castle.add(wall);
+}
+
+
+// Vorderseite
+
+castleWall(
+    -13,
+    4,
+    8,
+    26,
+    8,
+    2
+);
+
+castleWall(
+    13,
+    4,
+    8,
+    26,
+    8,
+    2
+);
+
+// Rückseite
+
+castleWall(
+    0,
+    4,
+    -18,
+    30,
+    8,
+    2
+);
+
+// Seiten
+
+castleWall(
+    -14,
+    4,
+    -5,
+    2,
+    8,
+    28
+);
+
+castleWall(
+    14,
+    4,
+    -5,
+    2,
+    8,
+    28
+);
+
+
+// =====================================================
+// BURGTÜRME
+// =====================================================
+
+function createTower(
     x,
     z
 ) {
 
     const tower =
+        new THREE.Group();
+
+    const base =
         new THREE.Mesh(
             new THREE.CylinderGeometry(
-                2.7,
-                2.7,
-                12,
+                3,
+                3.2,
+                9,
                 10
             ),
-            materials.stoneDark
+            wallMaterial
         );
 
-    tower.position.set(
-        x,
-        6,
-        z
-    );
+    base.position.y = 4.5;
 
-    tower.castShadow = true;
+    tower.add(base);
 
-    castle.add(tower);
 
     const roof =
         new THREE.Mesh(
             new THREE.ConeGeometry(
-                3.4,
-                4,
+                3.8,
+                5,
                 10
             ),
-            materials.roof
+            new THREE.MeshStandardMaterial({
+                color: 0x4b3030
+            })
         );
 
-    roof.position.set(
+    roof.position.y = 11.5;
+
+    tower.add(roof);
+
+
+    tower.position.set(
         x,
-        14,
+        0,
         z
     );
 
-    roof.castShadow = true;
-
-    castle.add(roof);
+    castle.add(tower);
 }
 
-castleTower(-12, 10);
-castleTower(12, 10);
-castleTower(-12, 30);
-castleTower(12, 30);
 
-const castleWall1 =
-    new THREE.Mesh(
-        new THREE.BoxGeometry(
-            30,
-            8,
-            2
-        ),
-        materials.stoneDark
-    );
-
-castleWall1.position.set(
-    0,
-    4,
-    10
+createTower(
+    -15,
+    8
 );
 
-castle.add(castleWall1);
+createTower(
+    15,
+    8
+);
 
-const castleWall2 =
-    castleWall1.clone();
-
-castleWall2.position.z =
-    30;
-
-castle.add(castleWall2);
-
-const castleWall3 =
-    new THREE.Mesh(
-        new THREE.BoxGeometry(
-            2,
-            8,
-            20
-        ),
-        materials.stoneDark
-    );
-
-castleWall3.position.set(
+createTower(
     -14,
-    4,
-    20
+    -19
 );
 
-castle.add(castleWall3);
+createTower(
+    14,
+    -19
+);
 
-const castleWall4 =
-    castleWall3.clone();
 
-castleWall4.position.x =
-    14;
-
-castle.add(castleWall4);
-
-// Burgtor
+// =====================================================
+// BURGTOR
+// =====================================================
 
 const gate =
     new THREE.Mesh(
         new THREE.BoxGeometry(
             7,
             7,
-            2.4
+            1
         ),
         new THREE.MeshStandardMaterial({
-            color: 0x3b2518
+            color: 0x4a2b18
         })
     );
 
 gate.position.set(
     0,
     3.5,
-    10
+    8
 );
 
 castle.add(gate);
 
-scene.add(castle);
+
+// Burgbanner
+
+const banner =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            2.5,
+            4,
+            0.15
+        ),
+        new THREE.MeshStandardMaterial({
+            color: 0x8b1e1e
+        })
+    );
+
+banner.position.set(
+    0,
+    7,
+    6.8
+);
+
+castle.add(banner);
+
+
+// =====================================================
+// BURGSCHILD
+// =====================================================
+
+function createTextSprite(
+    text,
+    color = "#ffffff"
+) {
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+    canvas.width = 512;
+    canvas.height = 128;
+
+    const ctx =
+        canvas.getContext("2d");
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.font =
+        "bold 54px Arial";
+
+    ctx.textAlign =
+        "center";
+
+    ctx.fillStyle =
+        color;
+
+    ctx.strokeStyle =
+        "black";
+
+    ctx.lineWidth = 8;
+
+    ctx.strokeText(
+        text,
+        256,
+        75
+    );
+
+    ctx.fillText(
+        text,
+        256,
+        75
+    );
+
+    const texture =
+        new THREE.CanvasTexture(
+            canvas
+        );
+
+    const material =
+        new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true
+        });
+
+    const sprite =
+        new THREE.Sprite(
+            material
+        );
+
+    sprite.scale.set(
+        10,
+        2.5,
+        1
+    );
+
+    return sprite;
+}
+
+
+const castleSign =
+    createTextSprite(
+        "BURG KÖNIGSREICH"
+    );
+
+castleSign.position.set(
+    0,
+    13,
+    5
+);
+
+scene.add(
+    castleSign
+);
+
 
 // =====================================================
 // SPIELER
@@ -645,8 +554,8 @@ const player = {
     position:
         new THREE.Vector3(
             0,
-            0,
-            65
+            1,
+            10
         ),
 
     velocityY: 0,
@@ -667,7 +576,7 @@ const player = {
 
     xpToNextLevel: 100,
 
-    gold: 50,
+    gold: 0,
 
     attackCooldown: 0,
 
@@ -677,11 +586,10 @@ const player = {
 
     armor: "Keine Rüstung",
 
-    armorBonus: 0,
-
-    attacking: false
+    armorBonus: 0
 
 };
+
 
 // =====================================================
 // INVENTAR
@@ -689,7 +597,7 @@ const player = {
 
 const inventory = {
 
-    "Heiltrank": 3,
+    "Heiltrank": 2,
 
     "Eisenschwert": 1,
 
@@ -697,182 +605,254 @@ const inventory = {
 
     "Eisen": 0,
 
-    "Goldmünze": 50
+    "Goldmünze": 0
 
 };
 
+
 // =====================================================
-// CHARAKTER
+// CHARAKTER-MODELL
 // =====================================================
+
+function createCharacter(
+    bodyColor,
+    skinColor = 0xf0c8a0,
+    hairColor = 0x3b2416
+) {
+
+    const character =
+        new THREE.Group();
+
+
+    // Körper
+
+    const body =
+        new THREE.Mesh(
+            new THREE.CapsuleGeometry(
+                0.48,
+                0.9,
+                6,
+                10
+            ),
+            new THREE.MeshStandardMaterial({
+                color: bodyColor
+            })
+        );
+
+    body.position.y = 1.35;
+
+    character.add(body);
+
+
+    // Kopf
+
+    const head =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.42,
+                16,
+                16
+            ),
+            new THREE.MeshStandardMaterial({
+                color: skinColor
+            })
+        );
+
+    head.position.y = 2.25;
+
+    character.add(head);
+
+
+    // Haare
+
+    const hair =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.44,
+                16,
+                8,
+                0,
+                Math.PI * 2,
+                0,
+                Math.PI * 0.55
+            ),
+            new THREE.MeshStandardMaterial({
+                color: hairColor
+            })
+        );
+
+    hair.position.y = 2.42;
+
+    character.add(hair);
+
+
+    // Augen
+
+    const eyeMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x111111
+        });
+
+
+    const eye1 =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.055,
+                8,
+                8
+            ),
+            eyeMaterial
+        );
+
+    eye1.position.set(
+        -0.15,
+        2.28,
+        -0.36
+    );
+
+    character.add(eye1);
+
+
+    const eye2 =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.055,
+                8,
+                8
+            ),
+            eyeMaterial
+        );
+
+    eye2.position.set(
+        0.15,
+        2.28,
+        -0.36
+    );
+
+    character.add(eye2);
+
+
+    // Beine
+
+    const legMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x29364a
+        });
+
+
+    const leg1 =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.14,
+                0.17,
+                0.8,
+                8
+            ),
+            legMaterial
+        );
+
+    leg1.position.set(
+        -0.2,
+        0.55,
+        0
+    );
+
+    character.add(leg1);
+
+
+    const leg2 =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.14,
+                0.17,
+                0.8,
+                8
+            ),
+            legMaterial
+        );
+
+    leg2.position.set(
+        0.2,
+        0.55,
+        0
+    );
+
+    character.add(leg2);
+
+
+    // Arme
+
+    const armMaterial =
+        new THREE.MeshStandardMaterial({
+            color: bodyColor
+        });
+
+
+    const arm1 =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.12,
+                0.14,
+                0.9,
+                8
+            ),
+            armMaterial
+        );
+
+    arm1.rotation.z =
+        -0.15;
+
+    arm1.position.set(
+        -0.6,
+        1.4,
+        0
+    );
+
+    character.add(arm1);
+
+
+    const arm2 =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.12,
+                0.14,
+                0.9,
+                8
+            ),
+            armMaterial
+        );
+
+    arm2.rotation.z =
+        0.15;
+
+    arm2.position.set(
+        0.6,
+        1.4,
+        0
+    );
+
+    character.add(arm2);
+
+
+    return character;
+}
+
 
 const playerMesh =
-    new THREE.Group();
-
-// Körper
-
-const torso =
-    new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.9,
-            1.35,
-            0.55
-        ),
-        materials.shirt
+    createCharacter(
+        0x315c9b,
+        0xf0c8a0,
+        0x392417
     );
-
-torso.position.y =
-    1.65;
-
-torso.castShadow = true;
-
-playerMesh.add(torso);
-
-// Kopf
-
-const head =
-    new THREE.Mesh(
-        new THREE.SphereGeometry(
-            0.42,
-            16,
-            16
-        ),
-        materials.skin
-    );
-
-head.position.y =
-    2.65;
-
-head.castShadow = true;
-
-playerMesh.add(head);
-
-// Haare
-
-const hair =
-    new THREE.Mesh(
-        new THREE.SphereGeometry(
-            0.44,
-            16,
-            12
-        ),
-        materials.hair
-    );
-
-hair.scale.set(
-    1,
-    0.55,
-    1
-);
-
-hair.position.y =
-    2.88;
-
-playerMesh.add(hair);
-
-// Arme
-
-function createArm(side) {
-
-    const arm =
-        new THREE.Mesh(
-            new THREE.CapsuleGeometry(
-                0.16,
-                0.75,
-                4,
-                8
-            ),
-            materials.skin
-        );
-
-    arm.position.set(
-        side * 0.62,
-        1.7,
-        0
-    );
-
-    arm.rotation.z =
-        side * -0.12;
-
-    arm.castShadow = true;
-
-    playerMesh.add(arm);
-
-    return arm;
-}
-
-const leftArm =
-    createArm(-1);
-
-const rightArm =
-    createArm(1);
-
-// Beine
-
-function createLeg(side) {
-
-    const leg =
-        new THREE.Mesh(
-            new THREE.CapsuleGeometry(
-                0.18,
-                0.85,
-                4,
-                8
-            ),
-            materials.pants
-        );
-
-    leg.position.set(
-        side * 0.25,
-        0.65,
-        0
-    );
-
-    leg.castShadow = true;
-
-    playerMesh.add(leg);
-
-    return leg;
-}
-
-const leftLeg =
-    createLeg(-1);
-
-const rightLeg =
-    createLeg(1);
-
-// Schuhe
-
-function createBoot(side) {
-
-    const boot =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                0.35,
-                0.25,
-                0.65
-            ),
-            materials.boots
-        );
-
-    boot.position.set(
-        side * 0.25,
-        0.15,
-        -0.12
-    );
-
-    boot.castShadow = true;
-
-    playerMesh.add(boot);
-}
-
-createBoot(-1);
-createBoot(1);
 
 playerMesh.position.copy(
     player.position
 );
 
-scene.add(playerMesh);
+scene.add(
+    playerMesh
+);
+
 
 // =====================================================
 // SCHWERT
@@ -881,82 +861,176 @@ scene.add(playerMesh);
 const sword =
     new THREE.Group();
 
+
+// Das Schwert zeigt nach vorne (-Z)
+
 const blade =
     new THREE.Mesh(
         new THREE.BoxGeometry(
             0.16,
             2.5,
-            0.28
+            0.22
         ),
-        materials.sword
+        new THREE.MeshStandardMaterial({
+            color: 0xd7dde2,
+            metalness: 0.85,
+            roughness: 0.2
+        })
     );
 
-// Das Schwert zeigt nach vorne
-blade.position.y =
-    1.35;
+blade.rotation.x =
+    Math.PI / 2;
+
+blade.position.set(
+    0,
+    0,
+    -1.35
+);
 
 sword.add(blade);
 
-const guard =
-    new THREE.Mesh(
-        new THREE.BoxGeometry(
-            1.0,
-            0.16,
-            0.18
-        ),
-        materials.gold
-    );
-
-guard.position.y =
-    0.15;
-
-sword.add(guard);
 
 const handle =
     new THREE.Mesh(
         new THREE.BoxGeometry(
             0.18,
-            0.75,
+            0.65,
             0.18
         ),
-        materials.swordHandle
+        new THREE.MeshStandardMaterial({
+            color: 0x5d4037
+        })
     );
 
 handle.position.y =
-    -0.25;
+    -0.35;
 
 sword.add(handle);
 
-const pommel =
+
+const guard =
     new THREE.Mesh(
-        new THREE.SphereGeometry(
-            0.15,
-            8,
-            8
+        new THREE.BoxGeometry(
+            0.75,
+            0.12,
+            0.16
         ),
-        materials.gold
+        new THREE.MeshStandardMaterial({
+            color: 0xb58b35,
+            metalness: 0.7
+        })
     );
 
-pommel.position.y =
-    -0.65;
+guard.position.y =
+    0;
 
-sword.add(pommel);
+sword.add(guard);
 
-// rechte Hand
+
+// Handposition
 
 sword.position.set(
-    0.65,
-    1.55,
+    0.58,
+    1.45,
     -0.15
 );
 
-sword.rotation.z =
-    -0.35;
+sword.rotation.x =
+    -0.15;
 
-rightArm.add(sword);
+playerMesh.add(
+    sword
+);
+
 
 // =====================================================
-// GEGNER
+// HÄNDLER
+// =====================================================
+
+const merchant =
+    createCharacter(
+        0x7b3f98,
+        0xd8a47f,
+        0x5b321c
+    );
+
+merchant.position.set(
+    5,
+    0,
+    -25
+);
+
+merchant.scale.set(
+    1.05,
+    1.05,
+    1.05
+);
+
+scene.add(
+    merchant
+);
+
+
+// Händler-Schild
+
+const merchantSign =
+    createTextSprite(
+        "HÄNDLER",
+        "#ffd54a"
+    );
+
+merchantSign.position.set(
+    5,
+    4,
+    -25
+);
+
+merchantSign.scale.set(
+    5,
+    1.25,
+    1
+);
+
+scene.add(
+    merchantSign
+);
+
+
+// Händler-Tisch
+
+const table =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            4,
+            1,
+            2
+        ),
+        new THREE.MeshStandardMaterial({
+            color: 0x70452b
+        })
+    );
+
+table.position.set(
+    5,
+    0.5,
+    -27
+);
+
+scene.add(table);
+
+
+// Händler-Zone
+
+const merchantPosition =
+    new THREE.Vector3(
+        5,
+        0,
+        -25
+    );
+
+
+// =====================================================
+// GEGNERTYPEN
 // =====================================================
 
 const enemyTypes = {
@@ -1000,7 +1074,7 @@ const enemyTypes = {
     elite: {
         name: "Elite",
         health: 220,
-        speed: 2,
+        speed: 2.0,
         damage: 25,
         xp: 250,
         goldMin: 30,
@@ -1011,135 +1085,92 @@ const enemyTypes = {
 
 };
 
+
 const enemies = [];
 
-const MAX_ENEMIES = 7;
+const MAX_ENEMIES = 6;
 
 const RESPAWN_TIME = 15;
 
+
 const spawnPoints = [
-    [35, 40],
-    [-30, -20],
-    [50, 35],
-    [-45, 0],
-    [55, -30],
-    [-50, -35],
-    [70, 10],
-    [-70, 20]
+
+    [12, 2],
+    [-15, -10],
+    [20, 15],
+    [-20, 20],
+    [30, -15],
+    [-30, 15],
+    [35, 30],
+    [-35, -30]
+
 ];
 
+
 // =====================================================
-// LEBENSLEISTEN
+// GEGNER LEBENSLEISTE
 // =====================================================
 
-function createHealthBar(enemy) {
+function createEnemyHealthBar() {
 
     const container =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     container.style.position =
         "fixed";
 
     container.style.width =
-        "70px";
+        "80px";
 
     container.style.height =
         "8px";
 
     container.style.background =
-        "rgba(0,0,0,0.7)";
+        "rgba(0,0,0,0.75)";
 
     container.style.border =
         "1px solid white";
 
-    container.style.zIndex =
-        "30";
-
     container.style.pointerEvents =
         "none";
 
-    const bar =
-        document.createElement("div");
+    container.style.zIndex =
+        "15";
 
-    bar.style.height =
-        "100%";
+
+    const bar =
+        document.createElement(
+            "div"
+        );
 
     bar.style.width =
         "100%";
 
-    bar.style.background =
-        enemy.type === "elite"
-            ? "#d8a8ff"
-            : "#e33";
+    bar.style.height =
+        "100%";
 
-    container.appendChild(bar);
+    bar.style.background =
+        "#e53935";
+
+    container.appendChild(
+        bar
+    );
 
     document.body.appendChild(
         container
     );
 
-    enemy.healthBar =
-        container;
-
-    enemy.healthFill =
-        bar;
+    return {
+        container,
+        bar
+    };
 }
 
-function updateHealthBar(enemy) {
-
-    if (
-        !enemy.healthBar ||
-        !enemy.mesh ||
-        !enemy.alive
-    ) {
-
-        if (enemy.healthBar) {
-            enemy.healthBar.style.display =
-                "none";
-        }
-
-        return;
-    }
-
-    const worldPosition =
-        enemy.position.clone();
-
-    worldPosition.y +=
-        enemy.scale * 2.2;
-
-    const projected =
-        worldPosition.project(
-            camera
-        );
-
-    const x =
-        (projected.x * 0.5 + 0.5) *
-        window.innerWidth;
-
-    const y =
-        (-projected.y * 0.5 + 0.5) *
-        window.innerHeight;
-
-    enemy.healthBar.style.display =
-        "block";
-
-    enemy.healthBar.style.left =
-        `${x - 35}px`;
-
-    enemy.healthBar.style.top =
-        `${y}px`;
-
-    enemy.healthFill.style.width =
-        `${Math.max(
-            0,
-            enemy.health /
-            enemy.maxHealth *
-            100
-        )}%`;
-}
 
 // =====================================================
-// GEGNERTYP
+// ENEMY TYPE
 // =====================================================
 
 function chooseEnemyType() {
@@ -1151,29 +1182,83 @@ function chooseEnemyType() {
         player.level >= 3 &&
         roll < 0.08
     ) {
-
         return "elite";
-
     }
 
-    if (roll < 0.25) {
-
+    if (
+        roll < 0.25
+    ) {
         return "runner";
-
     }
 
-    if (roll < 0.42) {
-
+    if (
+        roll < 0.42
+    ) {
         return "tank";
-
     }
 
     return "grunt";
 }
 
+
 // =====================================================
-// GEGNER ERSTELLEN
+// ENEMY ERSTELLEN
 // =====================================================
+
+function createEnemyMesh(
+    data
+) {
+
+    const enemy =
+        new THREE.Group();
+
+
+    const body =
+        new THREE.Mesh(
+            new THREE.CapsuleGeometry(
+                0.6,
+                1.4,
+                6,
+                10
+            ),
+            new THREE.MeshStandardMaterial({
+                color: data.color
+            })
+        );
+
+    body.position.y =
+        1.3;
+
+    enemy.add(body);
+
+
+    const head =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.45,
+                12,
+                12
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xd28b6a
+            })
+        );
+
+    head.position.y =
+        2.35;
+
+    enemy.add(head);
+
+
+    enemy.scale.set(
+        data.scale,
+        data.scale,
+        data.scale
+    );
+
+    return enemy;
+}
+
 
 function spawnEnemy(
     typeName = null
@@ -1184,10 +1269,9 @@ function spawnEnemy(
             e => e.alive
         ).length >= MAX_ENEMIES
     ) {
-
         return;
-
     }
+
 
     const type =
         typeName ||
@@ -1195,6 +1279,7 @@ function spawnEnemy(
 
     const data =
         enemyTypes[type];
+
 
     const spawn =
         spawnPoints[
@@ -1204,10 +1289,12 @@ function spawnEnemy(
             )
         ];
 
+
     const levelMultiplier =
         1 +
         (player.level - 1) *
         0.08;
+
 
     const enemy = {
 
@@ -1219,7 +1306,7 @@ function spawnEnemy(
         position:
             new THREE.Vector3(
                 spawn[0],
-                data.scale,
+                0,
                 spawn[1]
             ),
 
@@ -1256,97 +1343,49 @@ function spawnEnemy(
         goldMax:
             data.goldMax,
 
-        scale:
-            data.scale,
-
         alive: true,
 
         attackCooldown: 0,
 
         respawnTimer: 0,
 
-        mesh: null,
+        mesh:
+            createEnemyMesh(
+                data
+            ),
 
-        healthBar: null,
+        healthUI:
+            createEnemyHealthBar(),
 
-        healthFill: null
+        scale:
+            data.scale
 
     };
 
-    const enemyMesh =
-        new THREE.Group();
 
-    const body =
-        new THREE.Mesh(
-            new THREE.CapsuleGeometry(
-                0.6,
-                1.4,
-                4,
-                8
-            ),
-            new THREE.MeshStandardMaterial({
-                color: data.color
-            })
-        );
-
-    body.castShadow = true;
-
-    enemyMesh.add(body);
-
-    // Kopf
-
-    const enemyHead =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                0.45,
-                12,
-                12
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0xb56f55
-            })
-        );
-
-    enemyHead.position.y =
-        1.2;
-
-    enemyMesh.add(enemyHead);
-
-    enemyMesh.scale.set(
-        data.scale,
-        data.scale,
-        data.scale
-    );
-
-    enemyMesh.position.copy(
+    enemy.mesh.position.copy(
         enemy.position
     );
 
     scene.add(
-        enemyMesh
+        enemy.mesh
     );
-
-    enemy.mesh =
-        enemyMesh;
 
     enemies.push(
         enemy
     );
 
-    createHealthBar(
-        enemy
-    );
 
     if (
         type === "elite"
     ) {
-
         showMessage(
-            "👑 EIN ELITE-GEGNER IST ERSCHIENEN!"
+            "👑 ELITE-GEGNER ERSCHIENEN!"
         );
-
     }
+
 }
+
 
 // Startgegner
 
@@ -1355,11 +1394,97 @@ spawnEnemy("grunt");
 spawnEnemy("runner");
 spawnEnemy("tank");
 
+
+// =====================================================
+// HEALTHBARS AKTUALISIEREN
+// =====================================================
+
+function updateEnemyHealthBars() {
+
+    for (
+        const enemy of enemies
+    ) {
+
+        if (
+            !enemy.alive
+        ) {
+
+            enemy.healthUI.container.style.display =
+                "none";
+
+            continue;
+        }
+
+
+        const projected =
+            enemy.position.clone();
+
+        projected.y +=
+            3.2 *
+            enemy.scale;
+
+
+        projected.project(
+            camera
+        );
+
+
+        const x =
+            (projected.x * 0.5 + 0.5) *
+            window.innerWidth;
+
+
+        const y =
+            (-projected.y * 0.5 + 0.5) *
+            window.innerHeight;
+
+
+        enemy.healthUI.container.style.display =
+            "block";
+
+        enemy.healthUI.container.style.left =
+            `${x - 40}px`;
+
+        enemy.healthUI.container.style.top =
+            `${y - 4}px`;
+
+
+        enemy.healthUI.bar.style.width =
+            `${Math.max(
+                0,
+                enemy.health /
+                enemy.maxHealth *
+                100
+            )}%`;
+
+
+        if (
+            enemy.type === "elite"
+        ) {
+
+            enemy.healthUI.bar.style.background =
+                "#f1c40f";
+
+        }
+        else {
+
+            enemy.healthUI.bar.style.background =
+                "#e53935";
+
+        }
+
+    }
+
+}
+
+
 // =====================================================
 // LOOT
 // =====================================================
 
-function dropLoot(enemy) {
+function dropLoot(
+    enemy
+) {
 
     const gold =
         Math.floor(
@@ -1372,26 +1497,33 @@ function dropLoot(enemy) {
         ) +
         enemy.goldMin;
 
+
     player.gold +=
         gold;
 
     inventory["Goldmünze"] +=
         gold;
 
+
+    const roll =
+        Math.random();
+
+
     if (
         enemy.type === "elite"
     ) {
 
         inventory["Eisen"] += 2;
+
         inventory["Leder"] += 2;
 
         showMessage(
-            `👑 Elite-Loot: +${gold} Gold`
+            `👑 Elite-Loot: +${gold} Gold +2 Eisen +2 Leder`
         );
 
     }
     else if (
-        Math.random() < 0.5
+        roll < 0.35
     ) {
 
         inventory["Heiltrank"]++;
@@ -1401,7 +1533,9 @@ function dropLoot(enemy) {
         );
 
     }
-    else {
+    else if (
+        roll < 0.65
+    ) {
 
         inventory["Leder"]++;
 
@@ -1410,24 +1544,35 @@ function dropLoot(enemy) {
         );
 
     }
+    else {
+
+        inventory["Eisen"]++;
+
+        showMessage(
+            `+${gold} Gold | +1 Eisen`
+        );
+
+    }
+
 
     updateHUD();
 
     saveGame(false);
+
 }
+
 
 // =====================================================
 // XP
 // =====================================================
 
-function gainXP(amount) {
+function gainXP(
+    amount
+) {
 
     player.xp +=
         amount;
 
-    showMessage(
-        `+${amount} XP`
-    );
 
     while (
         player.xp >=
@@ -1438,12 +1583,20 @@ function gainXP(amount) {
             player.xpToNextLevel;
 
         levelUp();
+
     }
+
+
+    showMessage(
+        `+${amount} XP`
+    );
 
     updateHUD();
 
     saveGame(false);
+
 }
+
 
 function levelUp() {
 
@@ -1464,29 +1617,75 @@ function levelUp() {
     player.weaponDamage +=
         3;
 
+
     showMessage(
         `⭐ LEVEL UP! Level ${player.level}`
     );
+
 }
+
+
+// =====================================================
+// TREFFER-EFFEKT
+// =====================================================
+
+function hitEffect(
+    enemy
+) {
+
+    const original =
+        enemy.mesh.visible;
+
+
+    enemy.mesh.visible =
+        false;
+
+
+    setTimeout(() => {
+
+        if (
+            enemy.alive
+        ) {
+
+            enemy.mesh.visible =
+                original;
+
+        }
+
+    }, 100);
+
+}
+
 
 // =====================================================
 // GEGNER BESIEGT
 // =====================================================
 
-function killEnemy(enemy) {
+function killEnemy(
+    enemy
+) {
 
     if (
         !enemy.alive
     ) {
-
         return;
     }
+
 
     enemy.alive =
         false;
 
     enemy.respawnTimer =
         RESPAWN_TIME;
+
+
+    enemy.healthUI.container.style.display =
+        "none";
+
+
+    enemy.mesh.rotation.z =
+        Math.PI / 2;
+
 
     gainXP(
         enemy.xp
@@ -1496,27 +1695,36 @@ function killEnemy(enemy) {
         enemy
     );
 
+
     showMessage(
-        `${enemy.name} besiegt!`
+        `${enemy.name} besiegt! Respawn in ${RESPAWN_TIME}s`
     );
 
-    if (
-        enemy.healthBar
-    ) {
 
-        enemy.healthBar.style.display =
-            "none";
-    }
+    setTimeout(() => {
 
-    enemy.mesh.rotation.z =
-        Math.PI / 2;
+        if (
+            enemy.mesh.parent
+        ) {
+
+            scene.remove(
+                enemy.mesh
+            );
+
+        }
+
+    }, 500);
+
 }
+
 
 // =====================================================
 // RESPAWN
 // =====================================================
 
-function updateRespawns(delta) {
+function updateRespawns(
+    delta
+) {
 
     for (
         const enemy of enemies
@@ -1525,119 +1733,127 @@ function updateRespawns(delta) {
         if (
             enemy.alive
         ) {
-
             continue;
         }
+
 
         enemy.respawnTimer -=
             delta;
 
+
         if (
-            enemy.respawnTimer <= 0
+            enemy.respawnTimer > 0
+        ) {
+            continue;
+        }
+
+
+        const newType =
+            chooseEnemyType();
+
+        const data =
+            enemyTypes[newType];
+
+
+        const spawn =
+            spawnPoints[
+                Math.floor(
+                    Math.random() *
+                    spawnPoints.length
+                )
+            ];
+
+
+        const levelMultiplier =
+            1 +
+            (player.level - 1) *
+            0.08;
+
+
+        enemy.type =
+            newType;
+
+        enemy.name =
+            data.name;
+
+        enemy.health =
+            Math.floor(
+                data.health *
+                levelMultiplier
+            );
+
+        enemy.maxHealth =
+            enemy.health;
+
+        enemy.speed =
+            data.speed;
+
+        enemy.damage =
+            Math.floor(
+                data.damage *
+                levelMultiplier
+            );
+
+        enemy.xp =
+            Math.floor(
+                data.xp *
+                levelMultiplier
+            );
+
+        enemy.goldMin =
+            data.goldMin;
+
+        enemy.goldMax =
+            data.goldMax;
+
+        enemy.scale =
+            data.scale;
+
+
+        enemy.position.set(
+            spawn[0],
+            0,
+            spawn[1]
+        );
+
+
+        enemy.mesh =
+            createEnemyMesh(
+                data
+            );
+
+
+        enemy.mesh.position.copy(
+            enemy.position
+        );
+
+
+        scene.add(
+            enemy.mesh
+        );
+
+
+        enemy.alive =
+            true;
+
+        enemy.attackCooldown =
+            0;
+
+
+        if (
+            newType === "elite"
         ) {
 
-            const type =
-                chooseEnemyType();
-
-            const data =
-                enemyTypes[type];
-
-            const spawn =
-                spawnPoints[
-                    Math.floor(
-                        Math.random() *
-                        spawnPoints.length
-                    )
-                ];
-
-            const multiplier =
-                1 +
-                (player.level - 1) *
-                0.08;
-
-            enemy.type =
-                type;
-
-            enemy.name =
-                data.name;
-
-            enemy.health =
-                Math.floor(
-                    data.health *
-                    multiplier
-                );
-
-            enemy.maxHealth =
-                enemy.health;
-
-            enemy.speed =
-                data.speed;
-
-            enemy.damage =
-                Math.floor(
-                    data.damage *
-                    multiplier
-                );
-
-            enemy.xp =
-                Math.floor(
-                    data.xp *
-                    multiplier
-                );
-
-            enemy.goldMin =
-                data.goldMin;
-
-            enemy.goldMax =
-                data.goldMax;
-
-            enemy.scale =
-                data.scale;
-
-            enemy.position.set(
-                spawn[0],
-                data.scale,
-                spawn[1]
-            );
-
-            enemy.mesh.scale.set(
-                data.scale,
-                data.scale,
-                data.scale
-            );
-
-            enemy.mesh.position.copy(
-                enemy.position
-            );
-
-            enemy.mesh.rotation.set(
-                0,
-                0,
-                0
-            );
-
-            enemy.alive =
-                true;
-
-            enemy.attackCooldown =
-                0;
-
-            if (
-                enemy.healthFill
-            ) {
-
-                enemy.healthFill.style.background =
-                    type === "elite"
-                        ? "#d8a8ff"
-                        : "#e33";
-            }
-
             showMessage(
-                `${data.name} ist wieder da!`
+                "👑 Ein Elite-Gegner ist zurück!"
             );
+
         }
+
     }
+
 }
+
 
 // =====================================================
 // KAMPF
@@ -1648,38 +1864,25 @@ function attack() {
     if (
         player.attackCooldown > 0
     ) {
-
         return;
     }
 
+
     player.attackCooldown =
-        0.65;
+        0.55;
 
-    player.attacking =
-        true;
 
-    const startRotation =
-        sword.rotation.z;
+    sword.rotation.y =
+        -0.9;
 
-    sword.rotation.z =
-        -1.5;
 
     setTimeout(() => {
 
-        sword.rotation.z =
-            0.4;
+        sword.rotation.y =
+            0;
 
-    }, 120);
+    }, 180);
 
-    setTimeout(() => {
-
-        sword.rotation.z =
-            startRotation;
-
-        player.attacking =
-            false;
-
-    }, 280);
 
     const attackDirection =
         new THREE.Vector3(
@@ -1688,17 +1891,16 @@ function attack() {
             -1
         );
 
+
     attackDirection.applyAxisAngle(
         new THREE.Vector3(
             0,
             1,
             0
         ),
-        playerMesh.rotation.y
+        cameraYaw
     );
 
-    let hitSomething =
-        false;
 
     for (
         const enemy of enemies
@@ -1707,9 +1909,9 @@ function attack() {
         if (
             !enemy.alive
         ) {
-
             continue;
         }
+
 
         const difference =
             enemy.position
@@ -1718,41 +1920,42 @@ function attack() {
                     player.position
                 );
 
+
         const distance =
             difference.length();
 
-        if (
-            distance > 4.5
-        ) {
 
+        if (
+            distance > 4
+        ) {
             continue;
         }
 
+
         difference.normalize();
+
 
         const dot =
             attackDirection.dot(
                 difference
             );
 
-        if (
-            dot > 0.15
-        ) {
 
-            hitSomething =
-                true;
+        if (
+            dot > 0.25
+        ) {
 
             damageEnemy(
                 enemy,
                 player.weaponDamage
             );
+
         }
+
     }
+
 }
 
-// =====================================================
-// GEGNER SCHADEN
-// =====================================================
 
 function damageEnemy(
     enemy,
@@ -1762,40 +1965,29 @@ function damageEnemy(
     enemy.health -=
         damage;
 
-    // kurzer Treffer-Flash
 
-    enemy.mesh.traverse(
-        object => {
-
-            if (
-                object.material &&
-                object.material.color
-            ) {
-
-                const original =
-                    object.material.color.clone();
-
-                object.material.color.set(
-                    0xffffff
-                );
-
-                setTimeout(() => {
-
-                    if (
-                        object.material &&
-                        object.material.color
-                    ) {
-
-                        object.material.color.copy(
-                            original
-                        );
-
-                    }
-
-                }, 100);
-            }
-        }
+    hitEffect(
+        enemy
     );
+
+
+    if (
+        enemy.type === "elite"
+    ) {
+
+        showMessage(
+            `👑 ELITE -${damage}`
+        );
+
+    }
+    else {
+
+        showMessage(
+            `-${damage}`
+        );
+
+    }
+
 
     if (
         enemy.health <= 0
@@ -1804,14 +1996,19 @@ function damageEnemy(
         killEnemy(
             enemy
         );
+
     }
+
 }
+
 
 // =====================================================
 // GEGNER-KI
 // =====================================================
 
-function updateEnemies(delta) {
+function updateEnemies(
+    delta
+) {
 
     for (
         const enemy of enemies
@@ -1820,9 +2017,9 @@ function updateEnemies(delta) {
         if (
             !enemy.alive
         ) {
-
             continue;
         }
+
 
         const direction =
             player.position
@@ -1831,24 +2028,29 @@ function updateEnemies(delta) {
                     enemy.position
                 );
 
+
         const distance =
             direction.length();
 
+
         if (
-            distance > 2.4
+            distance > 2.2
         ) {
 
             direction.normalize();
+
 
             enemy.position.x +=
                 direction.x *
                 enemy.speed *
                 delta;
 
+
             enemy.position.z +=
                 direction.z *
                 enemy.speed *
                 delta;
+
 
             enemy.mesh.lookAt(
                 player.position.x,
@@ -1862,6 +2064,7 @@ function updateEnemies(delta) {
             enemy.attackCooldown -=
                 delta;
 
+
             if (
                 enemy.attackCooldown <= 0
             ) {
@@ -1872,14 +2075,20 @@ function updateEnemies(delta) {
 
                 enemy.attackCooldown =
                     1.5;
+
             }
+
         }
+
 
         enemy.mesh.position.copy(
             enemy.position
         );
+
     }
+
 }
+
 
 // =====================================================
 // SPIELER SCHADEN
@@ -1896,8 +2105,10 @@ function damagePlayer(
             player.armorBonus
         );
 
+
     player.health -=
         reducedDamage;
+
 
     player.health =
         Math.max(
@@ -1905,19 +2116,25 @@ function damagePlayer(
             0
         );
 
+
     updateHUD();
+
 
     showMessage(
         `-${reducedDamage} HP`
     );
+
 
     if (
         player.health <= 0
     ) {
 
         gameOver();
+
     }
+
 }
+
 
 // =====================================================
 // HEILTRANK
@@ -1936,6 +2153,7 @@ function usePotion() {
         return;
     }
 
+
     if (
         player.health >=
         player.maxHealth
@@ -1948,7 +2166,9 @@ function usePotion() {
         return;
     }
 
+
     inventory["Heiltrank"]--;
+
 
     player.health =
         Math.min(
@@ -1956,88 +2176,125 @@ function usePotion() {
             player.health + 40
         );
 
+
     showMessage(
         "+40 HP"
     );
 
+
     updateHUD();
 
     saveGame(false);
+
 }
 
+
 // =====================================================
-// HÄNDLER
+// HÄNDLER-MENÜ
 // =====================================================
 
-const merchant =
-    document.createElement(
-        "div"
+function distanceToMerchant() {
+
+    return player.position.distanceTo(
+        merchantPosition
     );
 
-merchant.style.position =
-    "fixed";
+}
 
-merchant.style.left =
-    "50%";
-
-merchant.style.top =
-    "50%";
-
-merchant.style.transform =
-    "translate(-50%, -50%)";
-
-merchant.style.background =
-    "rgba(15,15,15,0.96)";
-
-merchant.style.padding =
-    "25px";
-
-merchant.style.border =
-    "2px solid #d4af37";
-
-merchant.style.color =
-    "white";
-
-merchant.style.zIndex =
-    "90";
-
-merchant.style.minWidth =
-    "320px";
-
-merchant.style.display =
-    "none";
-
-document.body.appendChild(
-    merchant
-);
 
 function openMerchant() {
 
-    merchant.style.display =
-        "block";
+    if (
+        distanceToMerchant() > 6
+    ) {
 
-    merchant.innerHTML = `
+        showMessage(
+            "🧑 Komm näher zum Händler!"
+        );
+
+        return;
+    }
+
+
+    if (
+        document.getElementById(
+            "merchantMenu"
+        )
+    ) {
+        return;
+    }
+
+
+    const menu =
+        document.createElement(
+            "div"
+        );
+
+
+    menu.id =
+        "merchantMenu";
+
+
+    menu.style.position =
+        "fixed";
+
+    menu.style.left =
+        "50%";
+
+    menu.style.top =
+        "50%";
+
+    menu.style.transform =
+        "translate(-50%, -50%)";
+
+    menu.style.background =
+        "rgba(15,15,20,0.96)";
+
+    menu.style.padding =
+        "30px";
+
+    menu.style.border =
+        "3px solid #d4af37";
+
+    menu.style.borderRadius =
+        "12px";
+
+    menu.style.color =
+        "white";
+
+    menu.style.zIndex =
+        "100";
+
+    menu.style.minWidth =
+        "350px";
+
+
+    menu.innerHTML = `
 
         <h2>🧑 Händler</h2>
 
-        <p>Gold: 🪙 ${player.gold}</p>
+        <p>
+            Gold: <b id="merchantGold">
+            ${player.gold}
+            </b>
+        </p>
 
         <hr>
 
         <button id="buyPotion">
-            Heiltrank – 20 Gold
+            Heiltrank kaufen – 15 Gold
         </button>
 
         <br><br>
 
-        <button id="buyArmor">
-            Leder-Rüstung – 100 Gold
+        <button id="buyIron">
+            Eisen kaufen – 10 Gold
         </button>
 
         <br><br>
 
-        <button id="buySword">
-            Stahlschwert – 150 Gold
+        <button id="sellLeather">
+            Leder verkaufen – +8 Gold
         </button>
 
         <br><br>
@@ -2045,262 +2302,125 @@ function openMerchant() {
         <button id="closeMerchant">
             Schließen
         </button>
+
     `;
 
-    document.getElementById(
-        "buyPotion"
-    ).onclick = () => {
 
-        if (
-            player.gold < 20
-        ) {
+    document.body.appendChild(
+        menu
+    );
 
-            showMessage(
-                "Nicht genug Gold!"
-            );
 
-            return;
-        }
+    document
+        .getElementById(
+            "buyPotion"
+        )
+        .onclick = () => {
 
-        player.gold -= 20;
+            if (
+                player.gold < 15
+            ) {
 
-        inventory["Goldmünze"] -=
-            20;
+                showMessage(
+                    "Nicht genug Gold!"
+                );
 
-        inventory["Heiltrank"]++;
+                return;
+            }
 
-        showMessage(
-            "Heiltrank gekauft!"
-        );
 
-        openMerchant();
-        updateHUD();
-        saveGame(false);
-    };
+            player.gold -= 15;
 
-    document.getElementById(
-        "buyArmor"
-    ).onclick = () => {
+            inventory["Goldmünze"] -=
+                15;
 
-        if (
-            player.armor ===
-            "Leder-Rüstung"
-        ) {
+            inventory["Heiltrank"]++;
 
-            showMessage(
-                "Du besitzt diese Rüstung bereits!"
-            );
 
-            return;
-        }
+            updateHUD();
 
-        if (
-            player.gold < 100
-        ) {
+            saveGame(false);
 
-            showMessage(
-                "Nicht genug Gold!"
-            );
+        };
 
-            return;
-        }
 
-        player.gold -=
-            100;
+    document
+        .getElementById(
+            "buyIron"
+        )
+        .onclick = () => {
 
-        inventory["Goldmünze"] -=
-            100;
+            if (
+                player.gold < 10
+            ) {
 
-        player.armor =
-            "Leder-Rüstung";
+                showMessage(
+                    "Nicht genug Gold!"
+                );
 
-        player.armorBonus =
-            5;
+                return;
+            }
 
-        showMessage(
-            "🛡️ Leder-Rüstung gekauft!"
-        );
 
-        openMerchant();
-        updateHUD();
-        saveGame(false);
-    };
+            player.gold -= 10;
 
-    document.getElementById(
-        "buySword"
-    ).onclick = () => {
+            inventory["Goldmünze"] -=
+                10;
 
-        if (
-            player.weapon ===
-            "Stahlschwert"
-        ) {
+            inventory["Eisen"]++;
 
-            showMessage(
-                "Du besitzt dieses Schwert bereits!"
-            );
 
-            return;
-        }
+            updateHUD();
 
-        if (
-            player.gold < 150
-        ) {
+            saveGame(false);
 
-            showMessage(
-                "Nicht genug Gold!"
-            );
+        };
 
-            return;
-        }
 
-        player.gold -=
-            150;
+    document
+        .getElementById(
+            "sellLeather"
+        )
+        .onclick = () => {
 
-        inventory["Goldmünze"] -=
-            150;
+            if (
+                inventory["Leder"] <= 0
+            ) {
 
-        player.weapon =
-            "Stahlschwert";
+                showMessage(
+                    "Du hast kein Leder!"
+                );
 
-        player.weaponDamage =
-            40;
+                return;
+            }
 
-        inventory["Stahlschwert"] =
-            1;
 
-        showMessage(
-            "⚔️ Stahlschwert gekauft!"
-        );
+            inventory["Leder"]--;
 
-        openMerchant();
-        updateHUD();
-        saveGame(false);
-    };
+            player.gold += 8;
 
-    document.getElementById(
-        "closeMerchant"
-    ).onclick = () => {
+            inventory["Goldmünze"] += 8;
 
-        merchant.style.display =
-            "none";
-    };
+
+            updateHUD();
+
+            saveGame(false);
+
+        };
+
+
+    document
+        .getElementById(
+            "closeMerchant"
+        )
+        .onclick = () => {
+
+            menu.remove();
+
+        };
+
 }
 
-// =====================================================
-// HÄNDLER-POSITION
-// =====================================================
-
-const merchantPosition =
-    new THREE.Vector3(
-        0,
-        0,
-        20
-    );
-
-// Händler sichtbar
-
-const merchantMesh =
-    new THREE.Group();
-
-const merchantBody =
-    new THREE.Mesh(
-        new THREE.BoxGeometry(
-            0.9,
-            1.5,
-            0.6
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x8b5a2b
-        })
-    );
-
-merchantBody.position.y =
-    1.5;
-
-merchantMesh.add(
-    merchantBody
-);
-
-const merchantHead =
-    new THREE.Mesh(
-        new THREE.SphereGeometry(
-            0.4,
-            16,
-            16
-        ),
-        materials.skin
-    );
-
-merchantHead.position.y =
-    2.6;
-
-merchantMesh.add(
-    merchantHead
-);
-
-merchantMesh.position.copy(
-    merchantPosition
-);
-
-scene.add(
-    merchantMesh
-);
-
-// Händler-Schild
-
-const sign =
-    document.createElement(
-        "div"
-    );
-
-sign.textContent =
-    "🧑 HÄNDLER";
-
-sign.style.position =
-    "fixed";
-
-sign.style.zIndex =
-    "25";
-
-sign.style.color =
-    "#ffd54f";
-
-sign.style.fontWeight =
-    "bold";
-
-sign.style.pointerEvents =
-    "none";
-
-document.body.appendChild(
-    sign
-);
-
-function updateMerchantSign() {
-
-    const pos =
-        merchantPosition
-            .clone();
-
-    pos.y += 3.5;
-
-    pos.project(
-        camera
-    );
-
-    const x =
-        (pos.x * 0.5 + 0.5) *
-        window.innerWidth;
-
-    const y =
-        (-pos.y * 0.5 + 0.5) *
-        window.innerHeight;
-
-    sign.style.left =
-        `${x - 40}px`;
-
-    sign.style.top =
-        `${y}px`;
-}
 
 // =====================================================
 // INVENTAR
@@ -2308,27 +2428,32 @@ function updateMerchantSign() {
 
 function toggleInventory() {
 
-    let menu =
+    const existing =
         document.getElementById(
             "inventoryMenu"
         );
 
+
     if (
-        menu
+        existing
     ) {
 
-        menu.remove();
+        existing.remove();
 
         return;
+
     }
 
-    menu =
+
+    const menu =
         document.createElement(
             "div"
         );
 
+
     menu.id =
         "inventoryMenu";
+
 
     menu.style.position =
         "fixed";
@@ -2360,14 +2485,16 @@ function toggleInventory() {
     menu.style.minWidth =
         "320px";
 
+
     let html =
         `<h2>🎒 Inventar</h2>`;
+
 
     html +=
         `<p>⭐ Level: ${player.level}</p>`;
 
     html +=
-        `<p>XP: ${player.xp}/${player.xpToNextLevel}</p>`;
+        `<p>⭐ XP: ${player.xp}/${player.xpToNextLevel}</p>`;
 
     html +=
         `<p>🪙 Gold: ${player.gold}</p>`;
@@ -2378,8 +2505,8 @@ function toggleInventory() {
     html +=
         `<p>🛡️ Rüstung: ${player.armor}</p>`;
 
-    html +=
-        `<hr>`;
+    html += `<hr>`;
+
 
     for (
         const item in inventory
@@ -2387,25 +2514,37 @@ function toggleInventory() {
 
         html +=
             `<p>${item}: ${inventory[item]}</p>`;
+
     }
 
+
     html +=
-        `<button id="closeInventory">Schließen</button>`;
+        `<button id="closeInventory">
+            Schließen
+        </button>`;
+
 
     menu.innerHTML =
         html;
+
 
     document.body.appendChild(
         menu
     );
 
-    document.getElementById(
-        "closeInventory"
-    ).onclick = () => {
 
-        menu.remove();
-    };
+    document
+        .getElementById(
+            "closeInventory"
+        )
+        .onclick = () => {
+
+            menu.remove();
+
+        };
+
 }
+
 
 // =====================================================
 // SPEICHERN
@@ -2457,12 +2596,15 @@ function saveGame(
 
             z:
                 player.position.z
+
         },
 
         inventory: {
             ...inventory
         }
+
     };
+
 
     localStorage.setItem(
         "kingdomsBeyondSave",
@@ -2471,6 +2613,7 @@ function saveGame(
         )
     );
 
+
     if (
         show
     ) {
@@ -2478,8 +2621,11 @@ function saveGame(
         showMessage(
             "💾 Spiel gespeichert"
         );
+
     }
+
 }
+
 
 // =====================================================
 // LADEN
@@ -2492,59 +2638,60 @@ function loadGame() {
             "kingdomsBeyondSave"
         );
 
+
     if (
         !raw
     ) {
-
         return;
     }
+
 
     try {
 
         const data =
-            JSON.parse(raw);
+            JSON.parse(
+                raw
+            );
 
-        if (
+
+        Object.assign(
+            player,
             data.player
-        ) {
+        );
 
-            Object.assign(
-                player,
-                data.player
-            );
 
-            player.position.set(
-                data.player.x,
-                data.player.y,
-                data.player.z
-            );
-        }
-
-        if (
+        Object.assign(
+            inventory,
             data.inventory
-        ) {
+        );
 
-            Object.assign(
-                inventory,
-                data.inventory
-            );
-        }
+
+        player.position.set(
+            data.player.x,
+            data.player.y,
+            data.player.z
+        );
+
 
         playerMesh.position.copy(
             player.position
         );
 
+
+        updateHUD();
+
     }
-    catch (
-        error
-    ) {
+    catch (error) {
 
         console.error(
             "Save konnte nicht geladen werden:",
             error
         );
+
     }
+
 }
+
 
 // =====================================================
 // HUD
@@ -2554,6 +2701,7 @@ const hud =
     document.createElement(
         "div"
     );
+
 
 hud.style.position =
     "fixed";
@@ -2568,7 +2716,7 @@ hud.style.padding =
     "15px";
 
 hud.style.background =
-    "rgba(0,0,0,0.6)";
+    "rgba(0,0,0,0.55)";
 
 hud.style.color =
     "white";
@@ -2582,14 +2730,17 @@ hud.style.zIndex =
 hud.style.lineHeight =
     "1.6";
 
+
 document.body.appendChild(
     hud
 );
+
 
 const healthContainer =
     document.createElement(
         "div"
     );
+
 
 healthContainer.style.position =
     "fixed";
@@ -2615,10 +2766,12 @@ healthContainer.style.background =
 healthContainer.style.zIndex =
     "20";
 
+
 const healthBar =
     document.createElement(
         "div"
     );
+
 
 healthBar.style.width =
     "100%";
@@ -2629,6 +2782,7 @@ healthBar.style.height =
 healthBar.style.background =
     "#d62828";
 
+
 healthContainer.appendChild(
     healthBar
 );
@@ -2636,6 +2790,7 @@ healthContainer.appendChild(
 document.body.appendChild(
     healthContainer
 );
+
 
 function updateHUD() {
 
@@ -2662,15 +2817,27 @@ function updateHUD() {
             ).length
         }/${MAX_ENEMIES}
 
+        <br><br>
+
+        ${
+            distanceToMerchant() < 6
+                ? "🧑 Händler: E drücken"
+                : ""
+        }
+
     `;
+
 
     healthBar.style.width =
         (
             player.health /
             player.maxHealth *
             100
-        ) + "%";
+        ) +
+        "%";
+
 }
+
 
 // =====================================================
 // NACHRICHTEN
@@ -2685,8 +2852,10 @@ function showMessage(
             "div"
         );
 
+
     message.textContent =
         text;
+
 
     message.style.position =
         "fixed";
@@ -2695,7 +2864,7 @@ function showMessage(
         "50%";
 
     message.style.top =
-        "35%";
+        "40%";
 
     message.style.transform =
         "translate(-50%, -50%)";
@@ -2715,16 +2884,20 @@ function showMessage(
     message.style.zIndex =
         "80";
 
+
     document.body.appendChild(
         message
     );
+
 
     setTimeout(() => {
 
         message.remove();
 
     }, 900);
+
 }
+
 
 // =====================================================
 // GAME OVER
@@ -2734,13 +2907,16 @@ function gameOver() {
 
     document.exitPointerLock();
 
+
     const screen =
         document.createElement(
             "div"
         );
 
+
     screen.id =
         "gameOver";
+
 
     screen.style.position =
         "fixed";
@@ -2749,7 +2925,7 @@ function gameOver() {
         "0";
 
     screen.style.background =
-        "rgba(0,0,0,0.88)";
+        "rgba(0,0,0,0.85)";
 
     screen.style.display =
         "flex";
@@ -2772,6 +2948,7 @@ function gameOver() {
     screen.style.zIndex =
         "100";
 
+
     screen.innerHTML = `
 
         <div>DU BIST GEFALLEN</div>
@@ -2790,27 +2967,35 @@ function gameOver() {
 
     `;
 
+
     document.body.appendChild(
         screen
     );
 
-    document.getElementById(
-        "restart"
-    ).onclick = () => {
 
-        localStorage.removeItem(
-            "kingdomsBeyondSave"
-        );
+    document
+        .getElementById(
+            "restart"
+        )
+        .onclick = () => {
 
-        location.reload();
-    };
+            localStorage.removeItem(
+                "kingdomsBeyondSave"
+            );
+
+            location.reload();
+
+        };
+
 }
+
 
 // =====================================================
 // TASTATUR
 // =====================================================
 
 const keys = {};
+
 
 window.addEventListener(
     "keydown",
@@ -2819,8 +3004,10 @@ window.addEventListener(
         keys[event.code] =
             true;
 
+
         if (
-            event.code === "Space" &&
+            event.code ===
+            "Space" &&
             player.onGround
         ) {
 
@@ -2831,56 +3018,17 @@ window.addEventListener(
 
             player.onGround =
                 false;
+
         }
 
-        if (
-            event.code === "KeyE"
-        ) {
-
-            attack();
-        }
 
         if (
-            event.code === "KeyI"
+            event.code ===
+            "KeyE"
         ) {
-
-            toggleInventory();
-        }
-
-        if (
-            event.code === "KeyH"
-        ) {
-
-            usePotion();
-        }
-
-        if (
-            event.code === "F5"
-        ) {
-
-            event.preventDefault();
-
-            saveGame();
-        }
-
-        if (
-            event.code === "F9"
-        ) {
-
-            loadGame();
-        }
-
-        if (
-            event.code === "KeyB"
-        ) {
-
-            const distance =
-                player.position.distanceTo(
-                    merchantPosition
-                );
 
             if (
-                distance < 8
+                distanceToMerchant() < 6
             ) {
 
                 openMerchant();
@@ -2888,13 +3036,57 @@ window.addEventListener(
             }
             else {
 
-                showMessage(
-                    "Du bist zu weit vom Händler entfernt."
-                );
+                attack();
+
             }
+
         }
+
+
+        if (
+            event.code ===
+            "KeyI"
+        ) {
+
+            toggleInventory();
+
+        }
+
+
+        if (
+            event.code ===
+            "KeyH"
+        ) {
+
+            usePotion();
+
+        }
+
+
+        if (
+            event.code ===
+            "F5"
+        ) {
+
+            event.preventDefault();
+
+            saveGame();
+
+        }
+
+
+        if (
+            event.code ===
+            "F9"
+        ) {
+
+            loadGame();
+
+        }
+
     }
 );
+
 
 window.addEventListener(
     "keyup",
@@ -2902,8 +3094,10 @@ window.addEventListener(
 
         keys[event.code] =
             false;
+
     }
 );
+
 
 // =====================================================
 // MAUS
@@ -2913,6 +3107,7 @@ let cameraYaw = 0;
 
 let cameraPitch = -0.25;
 
+
 document.addEventListener(
     "click",
     event => {
@@ -2921,36 +3116,33 @@ document.addEventListener(
             event.target.id ===
             "restart"
         ) {
-
             return;
         }
+
 
         if (
             event.target.closest(
                 "#inventoryMenu"
-            ) ||
-            event.target.closest(
-                "#gameOver"
-            ) ||
-            event.target.closest(
-                "#merchant"
             )
         ) {
-
             return;
         }
+
 
         if (
-            merchant.style.display ===
-            "block"
+            event.target.closest(
+                "#merchantMenu"
+            )
         ) {
-
             return;
         }
 
+
         document.body.requestPointerLock();
+
     }
 );
+
 
 document.addEventListener(
     "mousemove",
@@ -2960,17 +3152,19 @@ document.addEventListener(
             document.pointerLockElement !==
             document.body
         ) {
-
             return;
         }
+
 
         cameraYaw -=
             event.movementX *
             0.002;
 
+
         cameraPitch -=
             event.movementY *
             0.002;
+
 
         cameraPitch =
             THREE.MathUtils.clamp(
@@ -2978,11 +3172,13 @@ document.addEventListener(
                 -1.2,
                 0.6
             );
+
     }
 );
 
+
 // =====================================================
-// SPIELERBEWEGUNG
+// SPIELER BEWEGUNG
 // =====================================================
 
 function updatePlayer(
@@ -2992,39 +3188,41 @@ function updatePlayer(
     const direction =
         new THREE.Vector3();
 
+
     if (
         keys["KeyW"]
     ) {
-
         direction.z -= 1;
     }
+
 
     if (
         keys["KeyS"]
     ) {
-
         direction.z += 1;
     }
+
 
     if (
         keys["KeyA"]
     ) {
-
         direction.x -= 1;
     }
+
 
     if (
         keys["KeyD"]
     ) {
-
         direction.x += 1;
     }
+
 
     if (
         direction.length() > 0
     ) {
 
         direction.normalize();
+
 
         direction.applyAxisAngle(
             new THREE.Vector3(
@@ -3035,77 +3233,50 @@ function updatePlayer(
             cameraYaw
         );
 
+
         const speed =
             keys["ShiftLeft"] ||
             keys["ShiftRight"]
                 ? player.runningSpeed
                 : player.speed;
 
+
         player.position.x +=
             direction.x *
             speed *
             delta;
+
 
         player.position.z +=
             direction.z *
             speed *
             delta;
 
+
         // Charakter schaut in Bewegungsrichtung
 
-        playerMesh.rotation.y =
+        const targetAngle =
             Math.atan2(
-                -direction.x,
-                -direction.z
+                direction.x,
+                direction.z
             );
 
-        // einfache Laufanimation
 
-        if (
-            player.onGround
-        ) {
+        playerMesh.rotation.y =
+            targetAngle;
 
-            const walk =
-                Math.sin(
-                    performance.now() *
-                    0.012
-                ) * 0.35;
-
-            leftLeg.rotation.x =
-                walk;
-
-            rightLeg.rotation.x =
-                -walk;
-
-            leftArm.rotation.x =
-                -walk;
-
-            rightArm.rotation.x =
-                walk;
-        }
     }
-    else {
 
-        leftLeg.rotation.x *=
-            0.85;
-
-        rightLeg.rotation.x *=
-            0.85;
-
-        leftArm.rotation.x *=
-            0.85;
-
-        rightArm.rotation.x *=
-            0.85;
-    }
 
     player.velocityY -=
         25 *
         delta;
 
+
     player.position.y +=
         player.velocityY *
         delta;
+
 
     if (
         player.position.y <= 0
@@ -3119,12 +3290,16 @@ function updatePlayer(
 
         player.onGround =
             true;
+
     }
+
 
     playerMesh.position.copy(
         player.position
     );
+
 }
+
 
 // =====================================================
 // KAMERA
@@ -3135,8 +3310,10 @@ function updateCamera() {
     const target =
         player.position.clone();
 
+
     target.y +=
-        1.5;
+        1.4;
+
 
     const offset =
         new THREE.Vector3(
@@ -3144,6 +3321,7 @@ function updateCamera() {
             2.5,
             8
         );
+
 
     offset.applyEuler(
         new THREE.Euler(
@@ -3154,6 +3332,7 @@ function updateCamera() {
         )
     );
 
+
     camera.position.copy(
         target
             .clone()
@@ -3162,28 +3341,13 @@ function updateCamera() {
             )
     );
 
+
     camera.lookAt(
         target
     );
+
 }
 
-// =====================================================
-// HUD + WELT UI
-// =====================================================
-
-function updateWorldUI() {
-
-    for (
-        const enemy of enemies
-    ) {
-
-        updateHealthBar(
-            enemy
-        );
-    }
-
-    updateMerchantSign();
-}
 
 // =====================================================
 // FENSTERGRÖSSE
@@ -3197,14 +3361,18 @@ window.addEventListener(
             window.innerWidth /
             window.innerHeight;
 
+
         camera.updateProjectionMatrix();
+
 
         renderer.setSize(
             window.innerWidth,
             window.innerHeight
         );
+
     }
 );
+
 
 // =====================================================
 // GAME LOOP
@@ -3213,11 +3381,13 @@ window.addEventListener(
 const clock =
     new THREE.Clock();
 
+
 function gameLoop() {
 
     requestAnimationFrame(
         gameLoop
     );
+
 
     const delta =
         Math.min(
@@ -3225,37 +3395,46 @@ function gameLoop() {
             0.05
         );
 
+
     if (
         player.attackCooldown > 0
     ) {
 
         player.attackCooldown -=
             delta;
+
     }
+
 
     updatePlayer(
         delta
     );
 
+
     updateEnemies(
         delta
     );
+
 
     updateRespawns(
         delta
     );
 
+
     updateCamera();
 
-    updateWorldUI();
+    updateEnemyHealthBars();
 
     updateHUD();
+
 
     renderer.render(
         scene,
         camera
     );
+
 }
+
 
 // =====================================================
 // START
@@ -3266,15 +3445,3 @@ loadGame();
 updateHUD();
 
 gameLoop();
-
-console.log(
-    "Kingdoms Beyond 0.6 gestartet!"
-);
-
-console.log(
-    "B = Händler öffnen (in der Nähe)"
-);
-
-console.log(
-    "E = Angreifen | I = Inventar | H = Heiltrank"
-);
